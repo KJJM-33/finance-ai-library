@@ -1,0 +1,246 @@
+id: vat_rec
+version: 1.1.0
+title: "VAT Reconciliation Narrative — Quarterly Review Commentary"
+category: month_end
+tags: [vat, reconciliation, working-papers, hmrc, compliance, uk-tax]
+difficulty: advanced
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a structured VAT reconciliation narrative from structured quarter-end
+  reconciliation output. Produces one or more of: file note, manager review,
+  client note.
+
+purpose: >
+  Takes the numerical results of a VAT working-papers review — box values, control
+  account reconciliation, aged balances, and output VAT proof — and produces
+  professional commentary in three modes: file_note (preparer working paper),
+  manager_review (concise sign-off summary), client_note (plain English for the
+  client). Set output_type to "all" to produce all three in one response.
+
+inputs:
+  - key: client_name
+    label: "Client name"
+    type: text
+    required: true
+    example: "Demo Company (UK) Ltd"
+  - key: period_end
+    label: "Quarter-end date (e.g. 28 Feb 2026)"
+    type: text
+    required: true
+    example: "28 Feb 2026"
+  - key: vat_scheme
+    label: "VAT scheme (e.g. UK VAT Standard)"
+    type: text
+    required: true
+    example: "UK VAT Standard"
+  - key: vat_number
+    label: "VAT registration number"
+    type: text
+    required: true
+    example: "GB 123456789"
+  - key: box1
+    label: "Box 1 — Output VAT due (£)"
+    type: number
+    required: true
+    example: 14523.40
+  - key: box4
+    label: "Box 4 — Input VAT reclaimed (£)"
+    type: number
+    required: true
+    example: 3187.60
+  - key: box5
+    label: "Box 5 — Net VAT to pay/reclaim (£ positive = payment)"
+    type: number
+    required: true
+    example: 11335.80
+  - key: box6
+    label: "Box 6 — Net sales excluding VAT (£)"
+    type: number
+    required: true
+    example: 72617.00
+  - key: box7
+    label: "Box 7 — Net purchases excluding VAT (£)"
+    type: number
+    required: true
+    example: 15938.00
+  - key: vat_control_diff
+    label: "VAT control account diff (£, zero = fully reconciled)"
+    type: number
+    required: true
+    example: 0.00
+  - key: vat_proof_diff
+    label: "Output VAT proof diff (£, zero = passes)"
+    type: number
+    required: true
+    example: -0.40
+  - key: box6_diff
+    label: "Box 6 vs cumulative TB sales diff (£, informational)"
+    type: number
+    required: true
+    example: -18450.00
+  - key: ap_total
+    label: "Aged payables total (£)"
+    type: number
+    required: true
+    example: 9204.80
+  - key: ap_bs_diff
+    label: "Aged payables vs balance sheet diff (£)"
+    type: number
+    required: true
+    example: 0.00
+  - key: ar_total
+    label: "Aged receivables total (£)"
+    type: number
+    required: true
+    example: 24870.50
+  - key: ar_bs_diff
+    label: "Aged receivables vs balance sheet diff (£)"
+    type: number
+    required: true
+    example: 120.00
+  - key: opening_vat_balance
+    label: "Opening VAT control balance (£, optional)"
+    type: number
+    required: false
+    example: 2150.00
+  - key: hmrc_total
+    label: "HMRC VAT payments in quarter (£, optional)"
+    type: number
+    required: false
+    example: 9875.00
+  - key: zero_rated_sales
+    label: "Zero-rated sales included in Box 6 (£, optional)"
+    type: number
+    required: false
+    example: 0.00
+  - key: filing_deadline
+    label: "Filing/payment deadline (e.g. 31 Mar 2026, optional)"
+    type: text
+    required: false
+    example: "31 Mar 2026"
+  - key: preparer_notes
+    label: "Preparer notes (JSON array of strings, max 5)"
+    type: textarea
+    required: false
+    is_array: true
+    example: '["AR/BS difference of £120 relates to a credit note raised on 1 Mar 2026, post period-end. Resolved in Q1 FY2027 return."]'
+  - key: output_type
+    label: "Output type (file_note / manager_review / client_note / all)"
+    type: text
+    required: true
+    example: "all"
+
+computed_fields: {}
+
+system_prompt: |
+  You are a Senior VAT Accountant and Chartered Management Accountant with deep expertise in UK VAT compliance, quarterly working-paper preparation, and client advisory.
+
+  Your outputs must reflect the real UK VAT compliance process:
+
+  1. The nine VAT return boxes have precise meanings. Box 1 = output VAT charged on sales. Box 4 = input VAT reclaimed on purchases. Box 5 = net VAT to pay (positive) or reclaim (negative). Box 6 = net sales excluding VAT. Box 7 = net purchases excluding VAT.
+
+  2. You perform and document four reconciliation checks in every quarterly review:
+     - VAT Control: (Opening balance + Box 1 − Box 4 − HMRC payments) must agree to the VAT control nominal in the trial balance, within £1.
+     - Output VAT Proof: (Box 6 − zero-rated sales) × 20% must equal Box 1, within £1.
+     - Aged Payables to Balance Sheet: within £1.
+     - Aged Receivables to Balance Sheet: within £1.
+     A fifth check — Box 6 vs cumulative TB sales — is informational on a Standard basis and must be documented but does not fail the review.
+
+  3. Risk classification:
+     - GREEN: all four primary checks pass (diff ≤ £1).
+     - AMBER: one or two primary checks fail with differences between £1–£500, and every failed check has a corresponding preparer note.
+     - RED: any primary check fails by more than £500, or multiple checks fail, or any difference cannot be explained.
+
+  4. Output format varies by type:
+     - file_note: Technical, structured, written for a manager/partner reviewer. Uses accounting terminology and working-paper refs (2A VAT Control, 2B Bank Rec, 2C Box 6 Rec, 3A AP, 3B AR).
+     - manager_review: Concise. Leads with risk rating and exception count. Two to four sentences max per section.
+     - client_note: Plain English. No jargon. No box numbers. No working-paper refs.
+
+  5. GBP formatting: £ prefix, comma separators, two decimal places. Box5 positive = "VAT due to HMRC of £X". Box5 negative = "VAT repayment due from HMRC of £X".
+
+  6. Filing deadline: if filing_deadline is supplied, state it directly. If not, derive as one month and seven days after period_end and state as an approximation.
+
+  7. Do not fabricate explanations for differences. If a difference cannot be explained, flag it as requiring investigation.
+
+  8. Every sentence in file_note and manager_review must carry analytical weight. No filler phrases.
+
+user_prompt_template: |
+  Please generate a VAT reconciliation narrative for the following quarter-end.
+
+  **Client:** {client_name}
+  **Period ended:** {period_end}
+  **VAT Scheme:** {vat_scheme}
+  **VAT Registration:** {vat_number}
+
+  **VAT Return — Key Boxes**
+  - Box 1 (Output VAT): £{box1:,.2f}
+  - Box 4 (Input VAT): £{box4:,.2f}
+  - Box 5 (Net VAT position): £{box5:,.2f}
+  - Box 6 (Net sales): £{box6:,.2f}
+  - Box 7 (Net purchases): £{box7:,.2f}
+
+  **Reconciliation Results**
+  - VAT Control diff (ref 2A): £{vat_control_diff:,.2f}
+  - Output VAT proof diff (ref 2C): £{vat_proof_diff:,.2f}
+  - Box 6 vs cumulative TB sales (ref 2C): £{box6_diff:,.2f}
+  - Aged Payables vs BS (ref 3A): £{ap_bs_diff:,.2f}   [AP total: £{ap_total:,.2f}]
+  - Aged Receivables vs BS (ref 3B): £{ar_bs_diff:,.2f}  [AR total: £{ar_total:,.2f}]
+
+  **Supporting figures (where provided)**
+  - Opening VAT control balance: £{opening_vat_balance:,.2f}
+  - HMRC payments in period: £{hmrc_total:,.2f}
+  - Zero-rated sales in Box 6: £{zero_rated_sales:,.2f}
+
+  **Preparer notes:**
+  {preparer_notes}
+
+  **Output type requested:** {output_type}
+
+  Using the system prompt guidelines, produce the narrative for output type "{output_type}". If output_type is "all", produce all three sections in this order: File Note, then Manager Review, then Client Note.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "## VAT File Note — {period_end}"
+      subsections: [VAT Position, Reconciliation Checks, Box 6/TB Comparison, Exceptions and Actions, Overall Risk Rating]
+    - name: "## Manager Review — {period_end}"
+      subsections: [Risk Rating, Key Figures, Exceptions, Recommended Focus]
+    - name: "## Client Summary — {period_end}"
+      subsections: [Your VAT position this quarter, What we checked, Anything you need to know]
+  conventions:
+    currency: "GBP, £ prefix, comma separators, 2 decimal places"
+    pass_fail: "[PASS ✓] and [FAIL ✗]"
+    risk_ratings: "GREEN / AMBER / RED (uppercase)"
+    effective_output_rate: "(Box 1 / Box 6) × 100, to 1 decimal place"
+
+error_handling:
+  missing_required: "If client_name, period_end, box1, box4, box5, box6, vat_control_diff, vat_proof_diff, ap_bs_diff, or ar_bs_diff is missing, return an error. Do not generate a partial narrative."
+  zero_box6: "State effective output rate not meaningful (nil sales in period)."
+  box5_inconsistency: "If abs(box5 - (box1 - box4)) > 1.00, flag as potential data input error."
+  invalid_output_type: "Default to 'all' and note the substitution."
+
+example_input:
+  client_name: "Demo Company (UK) Ltd"
+  period_end: "28 Feb 2026"
+  vat_scheme: "UK VAT Standard"
+  vat_number: "GB 123456789"
+  box1: 14523.40
+  box4: 3187.60
+  box5: 11335.80
+  box6: 72617.00
+  box7: 15938.00
+  vat_control_diff: 0.00
+  vat_proof_diff: -0.40
+  box6_diff: -18450.00
+  ap_total: 9204.80
+  ap_bs_diff: 0.00
+  ar_total: 24870.50
+  ar_bs_diff: 120.00
+  opening_vat_balance: 2150.00
+  hmrc_total: 9875.00
+  zero_rated_sales: 0.00
+  preparer_notes: '["AR/BS difference of £120 relates to a credit note raised on 1 Mar 2026, post period-end. Resolved in Q1 FY2027 return."]'
+  output_type: "all"

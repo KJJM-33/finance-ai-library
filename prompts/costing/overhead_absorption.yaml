@@ -1,0 +1,128 @@
+id: overhead_absorption
+version: 1.0.0
+title: "Overhead Absorption Rate Commentary"
+category: costing
+tags: [overhead, absorption, OAR, production, CIMA, costing]
+difficulty: advanced
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Explains over/under-absorption of overheads in plain English, calculates the
+  financial impact, and drafts management commentary.
+
+purpose: >
+  Takes budgeted and actual overhead and activity levels, calculates the OAR,
+  absorbed overhead, and expenditure/volume variances, and produces a structured
+  commentary covering the absorption position, variance split, drivers, and
+  accounting treatment recommendation.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: budgeted_overhead
+    label: "Budgeted overhead (£)"
+    type: number
+    required: true
+    example: 120000
+  - key: budgeted_activity
+    label: "Budgeted activity level (units/hours)"
+    type: number
+    required: true
+    example: 2000
+  - key: actual_activity
+    label: "Actual activity level (units/hours)"
+    type: number
+    required: true
+    example: 1850
+  - key: actual_overhead
+    label: "Actual overhead incurred (£)"
+    type: number
+    required: true
+    example: 121200
+  - key: activity_measure
+    label: "Activity measure used (e.g. machine hours, direct labour hours, units)"
+    type: text
+    required: true
+    example: "machine hours"
+
+computed_fields:
+  oar: "round(budgeted_overhead / budgeted_activity, 2)"
+  absorbed_overhead: "round(oar * actual_activity, 2)"
+  expenditure_variance: "budgeted_overhead - actual_overhead"
+  volume_variance: "round(oar * (actual_activity - budgeted_activity), 2)"
+  total_variance: "round(absorbed_overhead - actual_overhead, 2)"
+
+system_prompt: |
+  You are a management accountant explaining overhead absorption to a mixed-expertise
+  audience. You calculate the OAR, absorbed overhead, and variance split precisely,
+  then recommend clear accounting treatment. You explain what over/under-absorption
+  means in plain English before diving into the numbers. Structured markdown output
+  with clear section headings.
+
+user_prompt_template: |
+  Prepare a clear, professional overhead absorption summary for {period}:
+
+  - Budgeted overhead: £{budgeted_overhead:,.0f}
+  - Budgeted activity: {budgeted_activity:,} {activity_measure}
+  - OAR: £{oar:.2f} per {activity_measure}
+  - Actual activity: {actual_activity:,} {activity_measure}
+  - Overhead absorbed: £{absorbed_overhead:,.2f}
+  - Actual overhead incurred: £{actual_overhead:,.0f}
+  - Expenditure variance: £{expenditure_variance:,.0f} ({'favourable' if expenditure_variance >= 0 else 'adverse'})
+  - Volume variance: £{volume_variance:,.2f} ({'favourable' if volume_variance >= 0 else 'adverse'})
+  - Total over/(under) absorption: £{total_variance:,.2f}
+
+  Requirements:
+  1. Explain in 2 sentences what over/under-absorption means in plain English
+  2. State the total absorption position and split by expenditure vs volume variance
+  3. Explain what drove each variance (relate to activity level and cost control)
+  4. Recommend how the under/over-absorption should be treated (P&L write-off vs carry forward)
+
+  Output in markdown with section headings.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "**What This Means**"
+      notes: "2 sentences in plain English."
+    - name: "**Position**"
+      notes: "Total absorption position and split."
+    - name: "**Drivers**"
+      notes: "Expenditure variance and volume variance explained."
+    - name: "**Recommendation**"
+      notes: "Accounting treatment — P&L write-off vs carry forward."
+  conventions:
+    currency: GBP
+    oar_format: "£X.XX per [activity measure]"
+
+error_handling:
+  zero_budgeted_activity: "Cannot compute OAR — return an error."
+  zero_actual_overhead: "Flag as anomalous — verify inputs."
+  positive_total_variance: "This is over-absorption — note credit to P&L vs costs."
+  negative_total_variance: "This is under-absorption — note debit to P&L as period cost."
+
+video_hook: "Over and under-absorption explained in 60 seconds — and the Claude prompt that writes your commentary"
+
+example_input:
+  period: "July 2026"
+  budgeted_overhead: 120000
+  budgeted_activity: 2000
+  actual_activity: 1850
+  actual_overhead: 121200
+  activity_measure: "machine hours"
+
+example_output: |
+  ## Overhead Absorption Summary — July 2026
+
+  **What This Means:** When actual production activity differs from the budgeted level, the amount of overhead charged to products (absorbed) will differ from actual overheads incurred — this difference is the over or under-absorption. In July, the business under-absorbed overhead by £9,300, meaning products were charged less overhead than was actually spent.
+
+  **Position:** Total under-absorption of £9,300, comprising an expenditure variance of £1,200 adverse (actual overhead exceeded budget) and a volume variance of £8,100 adverse (lower activity than planned).
+
+  **Drivers:** The expenditure variance of £1,200 (A) reflects higher-than-budgeted overhead costs in the production facility. The volume variance of £8,100 (A) arose because actual machine hours of 1,850 fell 150 hours short of the budgeted 2,000, reducing the overhead absorbed into product costs.
+
+  **Recommendation:** Write off the under-absorption of £9,300 to cost of sales in July as a period cost. If the volume shortfall persists into August, consider whether the OAR should be revised for the remainder of the year.

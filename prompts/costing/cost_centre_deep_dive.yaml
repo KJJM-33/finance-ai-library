@@ -1,0 +1,139 @@
+id: cost_centre_deep_dive
+version: 1.0.0
+title: "Cost Centre Deep Dive Analysis"
+category: costing
+tags: [cost-centre, analysis, budget, overspend, management-accounts]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a structured cost centre analysis covering spend by category,
+  variance to budget, and recommended actions.
+
+purpose: >
+  Takes overall budget vs actual totals, line-item detail, and optionally the
+  department head name, and produces an executive summary, top variance drivers,
+  risk assessment (with >15% flags), and actionable recommendations.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: cost_centre
+    label: "Cost centre name/code"
+    type: text
+    required: true
+    example: "Marketing"
+  - key: budget_total
+    label: "Budget total (£)"
+    type: number
+    required: true
+    example: 30000
+  - key: actual_total
+    label: "Actual total (£)"
+    type: number
+    required: true
+    example: 34200
+  - key: line_items
+    label: "Line items (one per line: category | actual £ | budget £)"
+    type: textarea
+    required: true
+    example: |
+      Digital advertising | £8,100 | £5,000
+      Agency fees | £6,300 | £4,500
+      Staff costs | £18,500 | £19,200
+      Events | £1,300 | £1,300
+  - key: dept_head
+    label: "Department head name (optional)"
+    type: text
+    required: false
+    example: "Sarah Johnson"
+
+computed_fields:
+  variance: "actual_total - budget_total"
+  variance_pct: "round((variance / budget_total) * 100, 1)"
+  variance_label: "'adverse' if variance > 0 else 'favourable'"
+
+system_prompt: |
+  You are a management accountant producing cost centre analysis for department
+  heads and finance directors. You quantify variances precisely, flag lines where
+  actual exceeds budget by more than 15% for immediate attention, and make specific,
+  actionable recommendations. No filler phrases. Structured markdown output.
+
+user_prompt_template: |
+  Produce a cost centre analysis for the {cost_centre} department in {period}.
+
+  Summary:
+  - Budget: £{budget_total:,.0f}
+  - Actual: £{actual_total:,.0f}
+  - Variance: £{variance:,.0f} ({variance_label}, {variance_pct}%)
+
+  Line items:
+  {line_items}
+
+  Department head: {dept_head}
+
+  Produce:
+  1. A 2-sentence executive summary of the cost centre's performance
+  2. A bullet list of the top 3 variance drivers (favourable and adverse)
+  3. A risk assessment: flag any line where actual exceeds budget by >15% with [ACTION REQUIRED]
+  4. Recommended actions for the department head (2–3 bullet points)
+
+  Use UK management accounting language. Output in markdown with clear section headings.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "**Executive Summary**"
+      length: "2 sentences"
+    - name: "**Top Variance Drivers**"
+      format: bullet list
+    - name: "**Risk Flags**"
+      notes: "[ACTION REQUIRED] for lines >15% over budget"
+    - name: "**Recommended Actions for {dept_head}**"
+      format: bullet list, 2–3 items
+  conventions:
+    currency: GBP
+    risk_flag: "[ACTION REQUIRED]"
+    threshold: ">15% over budget"
+
+error_handling:
+  no_line_items: "Proceed with summary-level analysis only; note that line-item detail was not provided."
+  no_dept_head: "Address recommendations to 'the department head' generically."
+  all_favourable: "Note the clean result; still provide top 3 variance drivers."
+
+video_hook: "This cost centre analysis used to take me 45 minutes. Claude does it in 20 seconds."
+
+example_input:
+  period: "July 2026"
+  cost_centre: "Marketing"
+  budget_total: 30000
+  actual_total: 34200
+  line_items: |
+    Digital advertising | £8,100 | £5,000
+    Agency fees | £6,300 | £4,500
+    Staff costs | £18,500 | £19,200
+    Events | £1,300 | £1,300
+  dept_head: "Sarah Johnson"
+
+example_output: |
+  ## Cost Centre Analysis: Marketing — July 2026
+
+  **Executive Summary:** The Marketing cost centre recorded an adverse variance of £4,200 (14.0%) against budget in July 2026, driven primarily by digital advertising and agency costs brought forward ahead of the autumn product launch. Total actual spend of £34,200 reflects elevated activity in the run-up to the launch.
+
+  **Top Variance Drivers:**
+  - Digital advertising: £3,100 adverse — paid social campaigns launched two months ahead of original plan
+  - Agency fees: £1,800 adverse — additional creative resource for launch materials
+  - Staff costs: £700 favourable — one vacancy unfilled in month
+
+  **Risk Flags:**
+  - Digital advertising: actual £8,100 vs budget £5,000 — 62% adverse [ACTION REQUIRED]
+
+  **Recommended Actions for Sarah Johnson:**
+  - Confirm Q4 campaign budget can absorb the July spend brought forward; provide written confirmation to Finance by end of week
+  - Provide written approval for any further unbudgeted agency spend above £1,000
+  - Review headcount vacancy: extend freeze or recruit as planned?

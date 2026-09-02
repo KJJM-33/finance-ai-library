@@ -1,0 +1,155 @@
+id: margin_bridge
+version: 1.0.0
+title: "Gross Margin Bridge Narrative"
+category: reporting
+tags: [margin, gross-margin, bridge, variance]
+difficulty: advanced
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a structured gross margin bridge narrative explaining the movement
+  in gross margin percentage and absolute gross profit between two periods.
+  Decomposes into volume, price, cost inflation, and other impacts.
+
+purpose: >
+  Takes prior and current period financials plus bridge component values
+  and produces a three-section narrative: Margin Bridge Waterfall → Key Drivers
+  → Outlook. Each bridge line is quantified in both absolute GBP and percentage
+  point (pp) contribution. Designed for board packs, management commentary,
+  and investor reporting.
+
+inputs:
+  - key: period
+    label: "Period comparison label (e.g. FY2025 vs FY2024)"
+    type: text
+    required: true
+    example: "FY2025 vs FY2024"
+  - key: prior_revenue
+    label: "Prior period revenue (£)"
+    type: number
+    required: true
+    example: 48500000
+  - key: prior_cogs
+    label: "Prior period cost of goods sold (£)"
+    type: number
+    required: true
+    example: 33950000
+  - key: prior_margin_pct
+    label: "Prior period gross margin % (decimal, e.g. 0.30 for 30%)"
+    type: number
+    required: true
+    example: 0.300
+  - key: current_revenue
+    label: "Current period revenue (£)"
+    type: number
+    required: true
+    example: 54200000
+  - key: current_cogs
+    label: "Current period cost of goods sold (£)"
+    type: number
+    required: true
+    example: 36394000
+  - key: current_margin_pct
+    label: "Current period gross margin % (decimal, e.g. 0.328 for 32.8%)"
+    type: number
+    required: true
+    example: 0.328
+  - key: volume_impact
+    label: "Gross profit impact from volume change (£, positive = uplift)"
+    type: number
+    required: true
+    example: 1710000
+  - key: price_impact
+    label: "Gross profit impact from pricing (£, positive = improvement)"
+    type: number
+    required: true
+    example: 2280000
+  - key: cost_inflation
+    label: "Gross profit impact from cost inflation (£, negative = headwind)"
+    type: number
+    required: true
+    example: -1140000
+  - key: other_impacts
+    label: "Additional bridge items (JSON array: [{label, value}])"
+    type: textarea
+    required: false
+    is_array: true
+    example: '[{"label":"FX headwind","value":-456000},{"label":"Supplier rebates","value":285000}]'
+
+computed_fields: {}
+
+system_prompt: |
+  You are a Senior Management Accountant and FP&A Analyst with deep expertise in management accounting, financial reporting, and board-level communication. Your role is to produce clear, precise, and commercially insightful gross margin bridge narratives.
+
+  When generating a margin bridge:
+  1. Always open with a concise one-sentence summary of the overall gross margin movement (direction, magnitude in percentage points, and absolute GBP change in gross profit).
+  2. Decompose the movement into its constituent bridge components — volume, price, cost inflation, and any additional items — and quantify each in both absolute GBP and the equivalent percentage point impact: (bridge line GBP value / current period revenue) × 100.
+  3. Present the bridge as flowing narrative prose with clear signposting for each driver. Do not use tables. Use bullet points only for the waterfall summary section.
+  4. Be factual and precise: every number must tie back to the inputs provided. Commercially contextualised: briefly explain the business reason behind each driver where it can be reasonably inferred from the data.
+  5. Format all GBP amounts with comma separators and a £ prefix (e.g. £1,710,000). Express all margin percentages to one decimal place (e.g. 30.0%, 32.8%). Express all percentage point movements to one decimal place with explicit sign (e.g. +2.8pp, -1.2pp).
+  6. Structure your response using exactly these three sections: Margin Bridge Waterfall, Key Drivers, Outlook.
+  7. Do not introduce data, assumptions, or commentary that cannot be derived from the input values provided.
+
+user_prompt_template: |
+  Please generate a gross margin bridge narrative for the following period: {period}.
+
+  **Prior Period Financials**
+  - Revenue: £{prior_revenue:,.0f}
+  - Cost of Goods Sold: £{prior_cogs:,.0f}
+  - Gross Margin: {prior_margin_pct:.1%}
+
+  **Current Period Financials**
+  - Revenue: £{current_revenue:,.0f}
+  - Cost of Goods Sold: £{current_cogs:,.0f}
+  - Gross Margin: {current_margin_pct:.1%}
+
+  **Bridge Components**
+  - Volume impact: £{volume_impact:,.0f}
+  - Pricing impact: £{price_impact:,.0f}
+  - Cost inflation impact: £{cost_inflation:,.0f}
+  {other_impacts}
+
+  Please produce a structured narrative with the following three sections:
+
+  **Margin Bridge Waterfall** — Present the bridge as a narrative waterfall, walking from the prior period gross margin to the current period gross margin, quantifying each bridge line in both absolute GBP and percentage point terms. Confirm that the bridge lines sum correctly to the total gross profit movement.
+
+  **Key Drivers** — Provide a commercially contextualised explanation of the two or three most significant drivers of the margin movement.
+
+  **Outlook** — Offer a brief forward-looking paragraph on the sustainability of the current margin profile, noting any risks or tailwinds suggested by the bridge composition.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "**Margin Bridge Waterfall**"
+      notes: "Narrative prose waterfall. Each bridge step states the item label, GBP impact, and pp contribution. Include bridge reconciliation check."
+    - name: "**Key Drivers**"
+      notes: "Two or three most significant drivers by absolute pp contribution. Commercially contextualised."
+    - name: "**Outlook**"
+      notes: "Brief forward-looking paragraph. Appropriate hedging in this section only."
+  conventions:
+    currency: "GBP, £ prefix, commas"
+    margin_format: "To 1 decimal place (e.g. 30.0%)"
+    pp_format: "Signed to 1 decimal place (e.g. +2.8pp, -1.2pp)"
+    length: "350–500 words total"
+
+error_handling:
+  missing_required: "If period, prior_revenue, prior_cogs, current_revenue, or current_cogs is missing, return an error."
+  zero_current_revenue: "Report absolute GBP impacts only. Note pp contributions not meaningful."
+  inconsistent_margin_pct: "If supplied margin % doesn't match calculated within 0.5pp, flag the discrepancy."
+  large_reconciliation_gap: "If bridge lines diverge from total gross profit movement by more than 5%, flag as material reconciliation gap."
+  empty_other_impacts: "Proceed with volume, price, and cost inflation only."
+
+example_input:
+  period: "FY2025 vs FY2024"
+  prior_revenue: 48500000
+  prior_cogs: 33950000
+  prior_margin_pct: 0.300
+  current_revenue: 54200000
+  current_cogs: 36394000
+  current_margin_pct: 0.328
+  volume_impact: 1710000
+  price_impact: 2280000
+  cost_inflation: -1140000
+  other_impacts: '[{"label":"FX headwind","value":-456000},{"label":"Supplier rebates","value":285000}]'

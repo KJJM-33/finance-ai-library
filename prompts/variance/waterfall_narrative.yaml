@@ -1,0 +1,157 @@
+id: waterfall_narrative
+version: 1.0.0
+title: "Waterfall Narrative — Board-Ready Bridge Analysis"
+category: variance
+tags: [waterfall, bridge, narrative, board-pack, FP&A]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Turn a set of waterfall/bridge line items into a structured board-pack narrative.
+  Validates bridge arithmetic, ranks drivers by size, and produces a concise
+  explanation of what moved the metric and why.
+
+purpose: >
+  Covers any metric — Revenue, Gross Profit, EBITDA, Operating Cost, Headcount —
+  for any period comparison (actual vs prior year, current vs budget,
+  quarter-on-quarter). Designed for direct inclusion in a board pack or CFO update.
+
+inputs:
+  - key: period
+    label: "Comparison description (e.g. FY2025 vs FY2024)"
+    type: text
+    required: true
+    example: "FY2025 vs FY2024"
+  - key: entity
+    label: "Company or division name (leave blank if not applicable)"
+    type: text
+    required: false
+    example: "Keyaan Consulting Ltd"
+  - key: metric
+    label: "Metric being bridged (e.g. Revenue, EBITDA, Operating Cost)"
+    type: text
+    required: true
+    example: "Revenue"
+  - key: currency_symbol
+    label: "Currency symbol (e.g. £, $, €)"
+    type: text
+    required: false
+    example: "£"
+  - key: bridge_items
+    label: "Bridge items (JSON array: [{label, type, value, notes?}] — type is opening/driver/closing)"
+    type: textarea
+    required: true
+    is_array: true
+    example: '[{"label":"Opening","type":"opening","value":10200000,"notes":""},{"label":"Price","type":"driver","value":580000,"notes":"Contract renewals at 5% average increase"},{"label":"Volume","type":"driver","value":1150000,"notes":"Two new enterprise clients won in H1"},{"label":"Mix","type":"driver","value":-340000,"notes":"Shift toward lower-margin SME contracts"},{"label":"FX","type":"driver","value":-440000,"notes":"GBP strengthened against USD"},{"label":"Closing","type":"closing","value":11150000,"notes":""}]'
+  - key: tone
+    label: "Tone (concise / executive / detailed)"
+    type: text
+    required: true
+    example: "executive"
+
+computed_fields: {}
+
+system_prompt: |
+  You are a senior FP&A analyst and management accountant with 15 years of experience presenting bridge/waterfall analyses to CFOs and boards. Your audience is numerate and time-poor. Every word earns its place.
+
+  Rules you must follow:
+  1. Validate bridge arithmetic first. Compute opening + sum(driver values) and compare to closing. If the discrepancy exceeds 0.1% of the closing value (or £1, whichever is larger), flag this in ## Headline as an arithmetic note before proceeding. Do not silently absorb rounding errors larger than this.
+  2. Express all driver movements with direction labels: positive movements (uplift) are (F) for favourable metric types (revenue, profit) or (A) for cost metrics (cost reduction is (F) for costs). If metric type is ambiguous, use (↑) and (↓) instead of (F)/(A).
+  3. Format all monetary values consistently: use the provided currency_symbol, commas for thousands, and shorthand (e.g. £1.2m) if used uniformly throughout. For non-monetary metrics (headcount, units), use plain numbers with the appropriate unit.
+  4. Rank drivers in Key Drivers by absolute size, largest first.
+  5. Never use filler phrases: "it is worth noting", "it should be highlighted", "please note", "as can be seen", "in terms of".
+  6. Do not invent driver explanations. Use only analyst notes provided. If no note is given for a driver, describe the movement from the number alone without speculating on cause.
+  7. Write in third-person professional register.
+  8. If a driver has zero value, omit it from Key Drivers but include it in the Bridge Summary table.
+  9. Do not include bullet points unless tone is "detailed".
+  10. For the opening and closing items in Bridge Summary, use bold formatting.
+
+user_prompt_template: |
+  Produce a waterfall narrative for {metric} — {period} ({entity}).
+
+  BRIDGE ITEMS
+  ------------
+  {bridge_items}
+
+  Tone: {tone}
+
+  Please produce a waterfall narrative with these four sections:
+
+  ## Headline
+  One sentence stating the opening value, closing value, net movement, and primary driver. Include (F)/(A) or direction label on the net movement.
+
+  ## Bridge Summary
+  A structured table of all bridge items in the order provided:
+  | Driver | Movement ({currency_symbol}) | Direction |
+  With opening and closing rows bolded. Show driver movements as signed numbers (e.g. +£1,150k or −£440k).
+
+  ## Key Drivers
+  For each driver with a non-zero value, ordered by absolute size (largest first):
+  State the driver label, movement value, direction label, and 1–2 sentences of narrative incorporating the analyst note where provided.
+
+  ## Management Conclusion
+  1–3 sentences: the net story — what drove the movement, what it signals for the business, and (in detailed tone only) what to watch in the coming periods.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "## Headline"
+      length: "1 sentence"
+      notes: "State opening → closing → net movement. Bold the key figure."
+    - name: "## Bridge Summary"
+      length: "1 row per bridge item"
+      notes: "Table format. Opening and Closing rows bolded. Signed movements."
+    - name: "## Key Drivers"
+      length: "1–2 sentences per non-zero driver"
+      notes: "Ordered by absolute size. Direction label on each."
+    - name: "## Management Conclusion"
+      length: "1–3 sentences"
+      notes: "Net story + forward signal."
+  conventions:
+    favourability: "(F)/(A) or (↑)/(↓) if metric is ambiguous"
+    person: third
+    tone_modes: [concise, executive, detailed]
+
+error_handling:
+  missing_fields: "If period, metric, bridge_items, or tone is absent, return an error."
+  missing_opening_or_closing: "Return an error — bridge_items must contain exactly one opening and one closing item."
+  bridge_arithmetic_failure: "Flag the discrepancy in ## Headline; produce narrative using the stated closing value."
+  all_drivers_zero: "Produce Headline and Bridge Summary only; state metric was flat in Management Conclusion."
+  invalid_tone: "Default to 'executive' and proceed."
+
+example_input:
+  period: "FY2025 vs FY2024"
+  entity: "Keyaan Consulting Ltd"
+  metric: "Revenue"
+  currency_symbol: "£"
+  bridge_items: '[{"label":"Opening","type":"opening","value":10200000,"notes":""},{"label":"Price","type":"driver","value":580000,"notes":"Contract renewals delivered average 5% price increase"},{"label":"Volume","type":"driver","value":1150000,"notes":"Two new enterprise clients won in H1 plus existing client upsells"},{"label":"Mix","type":"driver","value":-340000,"notes":"Shift toward lower-margin SME contracts diluted average revenue per client"},{"label":"FX","type":"driver","value":-440000,"notes":"GBP strengthened against USD impacting export client billings"},{"label":"Closing","type":"closing","value":11150000,"notes":""}]'
+  tone: "executive"
+
+example_output: |
+  ## Headline
+  **Revenue grew from £10.20m to £11.15m, a £950k increase (F)**, driven primarily by volume growth from new enterprise client wins, partially offset by an FX headwind and adverse product mix shift.
+
+  ## Bridge Summary
+  | Driver | Movement (£) | Direction |
+  |--------|-------------|-----------|
+  | **Opening — FY2024** | **£10,200,000** | |
+  | Price | +£580,000 | (F) |
+  | Volume | +£1,150,000 | (F) |
+  | Mix | −£340,000 | (A) |
+  | FX | −£440,000 | (A) |
+  | **Closing — FY2025** | **£11,150,000** | |
+
+  ## Key Drivers
+  **Volume — +£1,150,000 (F)**
+  Revenue growth was led by volume, with two enterprise clients won in H1 contributing incremental billings alongside expansion within the existing client base.
+
+  **Price — +£580,000 (F)**
+  Contract renewals delivered an average 5% price increase across the client base, contributing £580k of organic growth above prior year.
+
+  **FX — −£440,000 (A)**
+  Sterling strengthened against the USD during the period, reducing the GBP value of export client billings.
+
+  ## Management Conclusion
+  Revenue grew £950k year-on-year to £11.15m, with organic volume and price increases delivering £1.73m of growth against a £780k combined headwind from adverse product mix and FX.

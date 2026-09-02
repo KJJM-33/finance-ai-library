@@ -1,0 +1,181 @@
+id: pl_deep_dive
+version: 1.3.0
+title: "P&L Deep Dive — CFO-Level Variance Commentary"
+category: reporting
+tags: [p-and-l, variance, commentary, management-accounts]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates structured management commentary for P&L variance reports suitable
+  for board packs and CFO updates. Transforms raw variance data into clear,
+  professional narrative with five fixed sections.
+
+purpose: >
+  Takes headline P&L figures (revenue, OpEx, EBITDA) with prior-year EBITDA
+  and analyst-supplied key drivers, and produces a five-section narrative:
+  Headline → Revenue Commentary → Cost Commentary → EBITDA Bridge → Outlook.
+  Ready to paste directly into a board pack with minimal editing.
+
+inputs:
+  - key: period
+    label: "Reporting period (e.g. October 2025)"
+    type: text
+    required: true
+    example: "September 2025"
+  - key: actual_revenue
+    label: "Actual revenue (£)"
+    type: number
+    required: true
+    example: 4850000
+  - key: budget_revenue
+    label: "Budget revenue (£)"
+    type: number
+    required: true
+    example: 5100000
+  - key: actual_opex
+    label: "Actual operating expenditure (£)"
+    type: number
+    required: true
+    example: 3200000
+  - key: budget_opex
+    label: "Budget operating expenditure (£)"
+    type: number
+    required: true
+    example: 3450000
+  - key: actual_ebitda
+    label: "Actual EBITDA (£)"
+    type: number
+    required: true
+    example: 1650000
+  - key: budget_ebitda
+    label: "Budget EBITDA (£)"
+    type: number
+    required: true
+    example: 1650000
+  - key: prior_year_ebitda
+    label: "Prior year EBITDA — same period (£)"
+    type: number
+    required: true
+    example: 1420000
+  - key: key_drivers
+    label: "Key drivers (JSON array of strings, max 5)"
+    type: textarea
+    required: false
+    is_array: true
+    example: '["Marketing underspend of £180k due to delayed campaign launch","Headcount savings of £70k from two open roles unfilled","Revenue shortfall driven by delayed contract signature on two enterprise accounts"]'
+  - key: tone
+    label: "Tone (concise / executive / detailed)"
+    type: text
+    required: true
+    example: "executive"
+
+computed_fields: {}
+
+system_prompt: |
+  You are a senior management accountant and FP&A analyst with 15 years of experience writing management accounts commentary for FTSE-listed and private equity-backed businesses. Your audience is the CFO and board — they are numerate, time-poor, and intolerant of vague language.
+
+  Rules you must follow without exception:
+  1. Use GBP (£) for all monetary values. Format numbers with commas and the £ sign (e.g. £1,250,000 or £1.25m for large figures — be consistent within a response).
+  2. Never use filler phrases such as "it is worth noting", "it should be highlighted", "please note", "as can be seen", or "in terms of".
+  3. Structure every response as: Headline → Revenue Commentary → Cost Commentary → EBITDA Bridge → Outlook. Use markdown sub-headings exactly as specified.
+  4. State variances as favourable (F) or adverse (A) using those abbreviations in parentheses after the figure.
+  5. Be direct. Every sentence must carry analytical weight. If a sentence could be deleted without losing meaning, delete it.
+  6. Default maximum length is 250 words. If tone is "detailed", you may extend to 400 words.
+  7. Do not use bullet points unless tone is "detailed" and only in the Cost Commentary section.
+  8. Write in third-person professional register ("The business delivered...", "Revenue underperformed...", not "We delivered..." or "You can see...").
+  9. Do not label a variance (F) if doing so would imply a positive outcome for a result that is itself a loss. If both actual_ebitda and budget_ebitda are negative, describe the movement as a "narrower loss" or "wider loss".
+  10. Do not compute or state a percentage variance where the comparison crosses zero. State the absolute movement only and describe it narratively.
+
+user_prompt_template: |
+  Produce a P&L variance commentary for {period} using the data below. Follow the output structure exactly: five markdown sub-headings — ## Headline, ## Revenue Commentary, ## Cost Commentary, ## EBITDA Bridge, ## Outlook.
+
+  **Financial Data:**
+  - Period: {period}
+  - Actual Revenue: £{actual_revenue:,.0f}
+  - Budget Revenue: £{budget_revenue:,.0f}
+  - Revenue Variance: calculated by you
+  - Actual OpEx: £{actual_opex:,.0f}
+  - Budget OpEx: £{budget_opex:,.0f}
+  - OpEx Variance: calculated by you
+  - Actual EBITDA: £{actual_ebitda:,.0f}
+  - Budget EBITDA: £{budget_ebitda:,.0f}
+  - EBITDA Variance vs Budget: calculated by you
+  - Prior Year EBITDA (same period): £{prior_year_ebitda:,.0f}
+  - EBITDA Variance vs Prior Year: calculated by you
+
+  **Key Drivers supplied by analyst:**
+  {key_drivers}
+
+  **Tone:** {tone}
+
+  Requirements:
+  - ## Headline: one sentence capturing overall performance verdict for the period.
+  - ## Revenue Commentary: 1–3 sentences on revenue performance vs budget, with variance stated as (F) or (A).
+  - ## Cost Commentary: 1–3 sentences (or bullets if tone is detailed) on OpEx vs budget, referencing the key drivers provided.
+  - ## EBITDA Bridge: 1–3 sentences quantifying the bridge from budget EBITDA to actual EBITDA, and from prior year EBITDA to actual EBITDA.
+  - ## Outlook: 1–2 sentences on forward implication or corrective action, written with appropriate confidence.
+  - No filler phrases. No bullet points unless tone is detailed. GBP formatting throughout.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "## Headline"
+      length: "1 sentence"
+      notes: "Bold the key figure. State verdict clearly (ahead/behind/in line)."
+    - name: "## Revenue Commentary"
+      length: "1–3 sentences"
+      notes: "Absolute + % variance. Label (F) or (A)."
+    - name: "## Cost Commentary"
+      length: "1–3 sentences or bullets (detailed only)"
+      notes: "Reference at least one named driver from key_drivers."
+    - name: "## EBITDA Bridge"
+      length: "1–3 sentences"
+      notes: "Quantify both vs-budget and vs-prior-year movements. Label (F) or (A)."
+    - name: "## Outlook"
+      length: "1–2 sentences"
+      notes: "Forward-looking. Avoid hedging language."
+  conventions:
+    currency: GBP
+    favourability: "(F)/(A)"
+    person: third
+    tone_modes: [concise, executive, detailed]
+
+error_handling:
+  missing_required: "If period, actual_revenue, budget_revenue, actual_opex, budget_opex, actual_ebitda, or budget_ebitda is missing, return an error."
+  zero_budget: "State absolute variance only and note 'percentage variance not meaningful (nil budget)'."
+  nil_variance: "If actual_ebitda == budget_ebitda exactly, state 'in line with budget' rather than forcing (F) or (A)."
+  both_ebitda_negative: "Use 'narrower loss' / 'wider loss' framing. Do not use plain (F)/(A) on vs-budget EBITDA."
+  sign_flip: "Do not compute percentage variance where actual and budget have different signs. State absolute movement narratively."
+  invalid_tone: "Default to 'executive' and proceed."
+  key_drivers_over_5: "Use only the first 5 items."
+
+example_input:
+  period: "September 2025"
+  actual_revenue: 4850000
+  budget_revenue: 5100000
+  actual_opex: 3200000
+  budget_opex: 3450000
+  actual_ebitda: 1650000
+  budget_ebitda: 1650000
+  prior_year_ebitda: 1420000
+  key_drivers: '["Marketing underspend of £180k due to delayed campaign launch","Headcount savings of £70k from two open roles unfilled","Revenue shortfall driven by delayed contract signature on two enterprise accounts"]'
+  tone: "executive"
+
+example_output: |
+  ## Headline
+  The business delivered EBITDA of **£1,650,000** in September 2025, in line with budget, with a cost underspend fully offsetting a revenue shortfall.
+
+  ## Revenue Commentary
+  Revenue of £4,850,000 was £250,000 (4.9%) below budget (A), driven by the delayed signature of two enterprise contracts that were expected to close within the period.
+
+  ## Cost Commentary
+  OpEx of £3,200,000 came in £250,000 below budget (F), with the variance attributable to a £180,000 marketing underspend following the deferral of a planned campaign and £70,000 of headcount savings from two roles that remained unfilled through the month.
+
+  ## EBITDA Bridge
+  Actual EBITDA of £1,650,000 was in line with budget (£nil variance), as the £250,000 (A) revenue miss was offset in full by the £250,000 (F) cost saving. Against the prior year comparative of £1,420,000, EBITDA improved by £230,000 (16.2%) (F).
+
+  ## Outlook
+  Contract closures deferred from September are expected to land in October, supporting a return to revenue run-rate in line with budget. Cost savings from open headcount will partially reverse as recruitment activity completes in Q4.

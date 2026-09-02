@@ -1,0 +1,101 @@
+id: accruals_review
+version: 1.0.0
+title: "Accruals Review & Journal Justification"
+category: month_end
+tags: [accruals, journal, month-end, review, audit-trail]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Reviews a list of accruals and generates a narrative justification for each,
+  suitable for audit trail and board-pack supporting notes.
+
+purpose: >
+  Takes an accruals list (description, amount, basis of estimate) and produces
+  a markdown table with one-sentence justification per item, risk flags for items
+  above materiality or with weak bases, and a summary count. Suitable for working
+  paper documentation and month-end sign-off.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: accruals_list
+    label: "Accruals (one per line: description | £amount | basis of estimate)"
+    type: textarea
+    required: true
+    example: |
+      Electricity | £1,200 | Prior month invoice × 1.05
+      Audit fee | £8,500 | Engagement letter quote
+      Marketing retainer | £3,000 | Contract monthly rate
+  - key: materiality_threshold
+    label: "Materiality threshold (£) — items above will be flagged (optional)"
+    type: number
+    required: false
+    example: 5000
+
+computed_fields: {}
+
+system_prompt: |
+  You are a management accountant preparing working paper documentation for
+  month-end close. You ensure every accrual has a clear justification, correct
+  accounting treatment, and appropriate risk flag. You distinguish between
+  accruals (costs incurred but not yet invoiced) and prepayments (costs paid
+  in advance of the benefit period). Items with weak or missing bases of
+  estimate are flagged for senior review. No filler phrases.
+
+user_prompt_template: |
+  Review the following accruals for {period} and generate a one-sentence justification for each, plus a summary table and any risk flags.
+
+  Accruals:
+  {accruals_list}
+
+  Materiality threshold: £{materiality_threshold} (flag any accrual above this as requiring senior review)
+
+  Requirements:
+  1. For each accrual: confirm the accounting treatment is correct (accrual vs prepayment) and provide a one-sentence audit justification
+  2. Flag any items above the materiality threshold as [REVIEW REQUIRED]
+  3. Flag any items where the basis of estimate is weak or missing as [BASIS UNCLEAR]
+  4. Output a markdown table: Accrual | £ Amount | Basis | Risk Flag | Justification
+  5. End with a summary: total accruals, items requiring review, items with unclear basis
+
+  Output only the table and summary in markdown.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "Accruals table"
+      columns: [Accrual, £ Amount, Basis, Risk Flag, Justification]
+    - name: "Summary"
+      content: "Total accruals | Items requiring review | Items with unclear basis"
+  conventions:
+    risk_flags: "[REVIEW REQUIRED] / [BASIS UNCLEAR]"
+    currency: GBP
+
+error_handling:
+  empty_accruals: "Return an error — cannot produce review with no accruals."
+  no_materiality_threshold: "Omit [REVIEW REQUIRED] flags if no threshold provided."
+  misclassified_item: "Flag if an item appears to be a prepayment rather than an accrual."
+
+video_hook: "Stop writing accruals justifications manually — let Claude draft the audit trail for you"
+
+example_input:
+  period: "July 2026"
+  accruals_list: |
+    Electricity | £1,200 | Prior month invoice × 1.05
+    Audit fee | £8,500 | Engagement letter quote
+    Marketing retainer | £3,000 | Contract monthly rate
+  materiality_threshold: 5000
+
+example_output: |
+  | Accrual | £ Amount | Basis | Risk Flag | Justification |
+  |---------|----------|-------|-----------|---------------|
+  | Electricity | £1,200 | Prior month invoice × 1.05 | — | Accrual based on the June invoice of £1,143 uplifted 5% for seasonal usage; reversal set for Day 1 August. |
+  | Audit fee | £8,500 | Engagement letter quote | [REVIEW REQUIRED] | Amount per the signed engagement letter from Smith & Jones dated 12 April 2026; above materiality threshold. |
+  | Marketing retainer | £3,000 | Contract monthly rate | — | Fixed monthly retainer per the agency contract effective 1 March 2026; no invoice received at cut-off. |
+
+  **Summary:** Total accruals: £12,700 | Items requiring review: 1 (audit fee) | Items with unclear basis: 0

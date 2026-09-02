@@ -1,0 +1,115 @@
+id: rolling_forecast_assumptions
+version: 1.0.0
+title: "Rolling Forecast Assumptions Narrative"
+category: reporting
+tags: [forecast, rolling-forecast, assumptions, fp-and-a, narrative]
+difficulty: advanced
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a structured assumptions narrative for a rolling forecast update,
+  covering revenue, cost, and headcount drivers.
+
+purpose: >
+  Takes the revised and prior EBITDA forecasts, revenue and cost assumption
+  changes, headcount movements, and key risks, and produces a 4–6 sentence
+  FP&A-quality narrative explaining what changed and why. Uses FP&A language
+  (headwind/tailwind, run-rate, sensitivity).
+
+inputs:
+  - key: period
+    label: "Forecast period being updated (e.g. Aug–Dec 2026)"
+    type: text
+    required: true
+    example: "Aug–Dec 2026"
+  - key: prior_forecast_ebitda
+    label: "Prior forecast EBITDA (£)"
+    type: number
+    required: true
+    example: 210000
+  - key: revised_forecast_ebitda
+    label: "Revised forecast EBITDA (£)"
+    type: number
+    required: true
+    example: 198000
+  - key: revenue_assumptions
+    label: "Key revenue assumption changes"
+    type: textarea
+    required: true
+    example: "TechCo contract renewal now expected to close in October rather than August — two months of contribution delayed at approximately £9k per month."
+  - key: cost_assumptions
+    label: "Key cost assumption changes"
+    type: textarea
+    required: true
+    example: "Decision to defer two planned hires into Q1 FY2027. Revised headcount run-rate 47 FTEs vs prior forecast of 49, saving approximately £3k per month."
+  - key: headcount_changes
+    label: "Headcount changes vs prior forecast (optional)"
+    type: textarea
+    required: false
+    example: "Net reduction of 2 FTEs vs prior forecast."
+  - key: key_risks
+    label: "Key forecast risks — downside scenarios (optional)"
+    type: textarea
+    required: false
+    example: "Further delay in TechCo contract beyond October — additional £9k adverse EBITDA impact per month of further slippage."
+
+computed_fields:
+  forecast_movement: "revised_forecast_ebitda - prior_forecast_ebitda"
+  movement_direction: "'upward' if forecast_movement >= 0 else 'downward'"
+
+system_prompt: |
+  You are an FP&A analyst presenting a rolling forecast revision to the Finance
+  Director. You explain what changed, why, and what the risks are — using FP&A
+  language (headwind/tailwind, run-rate, sensitivity). You are concise and
+  specific: every statement is quantified. No filler phrases. No bullet points.
+  Output is a single flowing narrative paragraph.
+
+user_prompt_template: |
+  Write a clear assumptions narrative (4–6 sentences) explaining the forecast revision for {period}.
+
+  - Prior forecast EBITDA: £{prior_forecast_ebitda:,.0f}
+  - Revised forecast EBITDA: £{revised_forecast_ebitda:,.0f}
+  - Movement: £{forecast_movement:,.0f} {movement_direction}
+
+  Revenue assumptions changed: {revenue_assumptions}
+  Cost assumptions changed: {cost_assumptions}
+  Headcount changes: {headcount_changes}
+  Key risks: {key_risks}
+
+  Requirements:
+  1. Lead with the revised EBITDA and the £ movement from prior forecast
+  2. Attribute the movement to revenue and cost drivers in £
+  3. Note any headcount changes and their cost impact
+  4. Flag the biggest downside risk with a quantified scenario if possible
+  5. Use FP&A language (tailwind/headwind, run-rate, sensitivity)
+
+  Output only the narrative. No bullet points.
+
+output_spec:
+  format: paragraph
+  length: "4–6 sentences"
+  conventions:
+    currency: GBP
+    person: third
+    language: "FP&A (headwind/tailwind, run-rate, sensitivity)"
+
+error_handling:
+  both_ebitda_negative: "Describe movement as narrower or wider loss rather than using (F)/(A)."
+  no_headcount_changes: "Omit headcount sentence if no changes provided."
+  no_key_risks: "Close with a general statement about monitoring assumptions."
+
+video_hook: "FP&A rolling forecast commentary written in 15 seconds — this is the prompt"
+
+example_input:
+  period: "Aug–Dec 2026"
+  prior_forecast_ebitda: 210000
+  revised_forecast_ebitda: 198000
+  revenue_assumptions: "TechCo contract renewal now expected to close in October rather than August — two months of contribution delayed at approximately £9k per month."
+  cost_assumptions: "Decision to defer two planned hires into Q1 FY2027. Revised headcount run-rate 47 FTEs vs prior forecast of 49, saving approximately £3k per month."
+  headcount_changes: "Net reduction of 2 FTEs vs prior forecast."
+  key_risks: "Further delay in TechCo contract beyond October — additional £9k adverse EBITDA impact per month of further slippage. Management have escalated to CEO level."
+
+example_output: |
+  The revised forecast for August–December 2026 indicates EBITDA of £198,000, representing a downward revision of £12,000 from the prior forecast. The primary driver is a revenue headwind of £18,000 across the period, reflecting the delayed TechCo contract renewal now expected to close in October rather than August — this alone reduces the forecast by two months of contribution at approximately £9,000 per month. This is partially offset by a cost tailwind of £6,000 arising from the decision to defer two planned hires into Q1 FY2027, with the revised headcount run-rate of 47 FTEs saving approximately £3,000 per month in salary and NI. The principal downside risk is a further delay in the TechCo contract beyond October, which would represent an additional £9,000 adverse EBITDA impact per month of further slippage; management have escalated to CEO level to accelerate resolution.

@@ -1,0 +1,99 @@
+id: adverse_volume_variance
+version: 1.0.0
+title: "Adverse Volume Variance Commentary"
+category: variance
+tags: [variance, volume, adverse, management-accounts, board-pack]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates professional commentary for adverse volume variances suitable for
+  board packs and management accounts.
+
+purpose: >
+  Takes actual and budgeted volume, a standard margin per unit, and optional
+  context to produce a concise 3–5 sentence commentary explaining the variance,
+  its financial impact, and the forward outlook.
+
+inputs:
+  - key: period
+    label: "Reporting period (e.g. May 2026)"
+    type: text
+    required: true
+    example: "May 2026"
+  - key: actual_volume
+    label: "Actual volume sold/produced"
+    type: number
+    required: true
+    example: 1750
+  - key: budgeted_volume
+    label: "Budgeted volume"
+    type: number
+    required: true
+    example: 2100
+  - key: standard_margin
+    label: "Standard margin per unit (£)"
+    type: number
+    required: true
+    example: 70
+  - key: context
+    label: "Known reasons for variance (optional)"
+    type: textarea
+    required: false
+    example: "Three-day line stoppage in week two due to supplier delays on key components."
+
+computed_fields:
+  variance: "budgeted_volume - actual_volume"
+  variance_pct: "round((variance / budgeted_volume) * 100, 1)"
+  financial_impact: "round(variance * standard_margin, 0)"
+
+system_prompt: |
+  You are a management accountant writing variance commentary for a board pack.
+  You are concise, precise, and commercially aware. You write in UK management
+  accounting conventions — favourable and adverse, not positive and negative.
+  Every sentence carries analytical weight. No filler phrases.
+
+user_prompt_template: |
+  Write a concise, professional explanation (3–5 sentences) for the following adverse volume variance:
+
+  - Period: {period}
+  - Budgeted volume: {budgeted_volume:,} units
+  - Actual volume: {actual_volume:,} units
+  - Volume variance: {variance:,} units ({variance_pct}% adverse)
+  - Financial impact: £{financial_impact:,.0f} adverse
+  - Context provided: {context}
+
+  Requirements:
+  1. Open with the financial impact figure (£ and %)
+  2. State the volume shortfall clearly
+  3. Reference any context provided or note "under investigation" if none
+  4. Use professional UK management accounting language
+  5. End with a forward-looking sentence about expected recovery or monitoring
+
+  Output only the commentary paragraph. No preamble.
+
+output_spec:
+  format: paragraph
+  length: "3–5 sentences"
+  conventions:
+    currency: GBP
+    favourability: "favourable/adverse (not positive/negative)"
+    person: third
+
+error_handling:
+  zero_budget: "Cannot compute variance percentage — state absolute shortfall only."
+  no_context: "Note 'variance is under investigation' in place of driver explanation."
+
+video_hook: "Here's the exact Claude prompt I use to write volume variance commentary in under 10 seconds"
+
+example_input:
+  period: "May 2026"
+  actual_volume: 1750
+  budgeted_volume: 2100
+  standard_margin: 70
+  context: "Three-day line stoppage in week two due to supplier delays on key components."
+
+example_output: |
+  The adverse volume variance of £24,500 in May 2026 reflects a shortfall of 350 units against the budgeted 2,100 units (16.7% adverse). Production was impacted by a three-day line stoppage in week two due to supplier delays on key components. The financial impact has been partially offset by a favourable price variance reported separately. Management are monitoring order book recovery and expect volumes to normalise in June, with a catch-up production plan agreed with the operations team.

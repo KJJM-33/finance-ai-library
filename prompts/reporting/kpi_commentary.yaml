@@ -1,0 +1,104 @@
+id: kpi_commentary
+version: 1.0.0
+title: "KPI Dashboard Commentary"
+category: reporting
+tags: [KPI, dashboard, commentary, performance, management-accounts]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a plain-English commentary section for a KPI dashboard, covering
+  RAG status, key movements, and recommended actions.
+
+purpose: >
+  Takes a list of KPIs with actuals, targets, prior month comparatives, and
+  RAG statuses, and produces a 150–200 word commentary covering overall
+  assessment, top performers (Green), at-risk KPIs (Red/Amber), recommended
+  actions, and a one-sentence forward look.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: kpis
+    label: "KPIs (one per line: KPI name | actual | target | prior month | RAG status R/A/G)"
+    type: textarea
+    required: true
+    example: |
+      Revenue growth YoY | +12% | +10% | +11% | G
+      Gross margin | 48.2% | 52% | 49.1% | R
+      Cash conversion | 94% | 85% | 88% | G
+      Debtor days | 42 days | 35 days | 38 days | A
+  - key: audience
+    label: "Audience (e.g. Board, Finance Director, Department Heads)"
+    type: text
+    required: false
+    example: "Board"
+
+computed_fields: {}
+
+system_prompt: |
+  You are a management accountant producing KPI dashboard commentary. You call
+  out strong performance and at-risk metrics with specific recommended actions,
+  not vague observations. You write in 150–200 words maximum. No filler phrases.
+  Output is clean markdown with minimal headings. For each Red KPI you provide
+  one specific, actionable management recommendation.
+
+user_prompt_template: |
+  Produce KPI commentary for {audience} for {period}. Review the following KPIs and generate a professional commentary section.
+
+  KPIs:
+  {kpis}
+
+  Requirements:
+  1. Open with an overall performance assessment (1 sentence — e.g. "Mixed performance in July...")
+  2. Highlight the 2 strongest performing KPIs (Green) with brief explanation
+  3. Highlight the 2 most at-risk KPIs (Red/Amber) and explain why
+  4. For each Red KPI: suggest one specific management action
+  5. Close with a 1-sentence forward look
+  6. Keep the total commentary to 150–200 words
+
+  Output in clean markdown with minimal headings.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "Overall assessment (1 sentence)"
+    - name: "**Performing Well:**"
+    - name: "**Watch Items:**"
+    - name: "Forward look (1 sentence)"
+  conventions:
+    length: "150–200 words total"
+
+error_handling:
+  all_green: "Note the clean sweep — still suggest one monitoring focus area."
+  all_red: "Prioritise the most critical KPIs; note the need for an urgent management review."
+  no_audience: "Default to a finance director audience."
+
+video_hook: "Stop manually writing KPI commentary — here's the Claude prompt that does it in 12 seconds"
+
+example_input:
+  period: "July 2026"
+  audience: "Board"
+  kpis: |
+    Revenue growth YoY | +12% | +10% | +11% | G
+    Gross margin | 48.2% | 52% | 49.1% | R
+    Cash conversion | 94% | 85% | 88% | G
+    Debtor days | 42 days | 35 days | 38 days | A
+
+example_output: |
+  Performance in July 2026 was mixed, with strong revenue and cash metrics offset by margin pressure and deteriorating debtor days.
+
+  **Performing Well:**
+  - Revenue growth (G): +12% YoY, ahead of the 10% target — enterprise wins in Q2 continue to drive topline momentum
+  - Cash conversion (G): 94% vs 85% target — reflects improved invoicing discipline and faster collections in June/July
+
+  **Watch Items:**
+  - Gross margin (R): 48.2% vs 52% target — input cost inflation has not yet been passed through to pricing; Finance and Commercial are reviewing the pricing model this week
+  - Debtor days (A): 42 days vs 35-day target — three enterprise clients have extended payment terms beyond contract; credit control to escalate two overdue accounts by 31 July
+
+  August focus: margin recovery and debtor days reduction are the two priorities ahead of the Q3 board presentation.

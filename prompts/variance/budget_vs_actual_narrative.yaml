@@ -1,0 +1,124 @@
+id: budget_vs_actual_narrative
+version: 1.0.0
+title: "Budget vs Actual P&L Narrative"
+category: variance
+tags: [budget, actual, P&L, narrative, management-accounts]
+difficulty: beginner
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a full P&L commentary section comparing actuals to budget —
+  suitable for the narrative section of a management accounts pack.
+
+purpose: >
+  Takes headline P&L figures (revenue, gross profit, EBITDA) against budget,
+  plus analyst-supplied variance drivers, and produces a 4–6 sentence
+  board-ready narrative covering the EBITDA outturn, revenue performance,
+  gross margin, key drivers, and forward outlook.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: actual_revenue
+    label: "Actual revenue (£)"
+    type: number
+    required: true
+    example: 168000
+  - key: budget_revenue
+    label: "Budget revenue (£)"
+    type: number
+    required: true
+    example: 160000
+  - key: actual_gross_profit
+    label: "Actual gross profit (£)"
+    type: number
+    required: true
+    example: 88100
+  - key: budget_gross_profit
+    label: "Budget gross profit (£)"
+    type: number
+    required: true
+    example: 84000
+  - key: actual_ebitda
+    label: "Actual EBITDA (£)"
+    type: number
+    required: true
+    example: 33000
+  - key: budget_ebitda
+    label: "Budget EBITDA (£)"
+    type: number
+    required: true
+    example: 27800
+  - key: key_variances
+    label: "Key variance drivers (free text)"
+    type: textarea
+    required: true
+    example: "Above-plan volumes in the enterprise segment following two contract renewals. Marketing spend £2,800 over budget due to campaign pulled forward from Q4."
+
+computed_fields:
+  revenue_var: "actual_revenue - budget_revenue"
+  revenue_var_pct: "round((revenue_var / budget_revenue) * 100, 1)"
+  gp_var: "actual_gross_profit - budget_gross_profit"
+  ebitda_var: "actual_ebitda - budget_ebitda"
+  ebitda_var_pct: "round((ebitda_var / budget_ebitda) * 100, 1)"
+  revenue_var_label: "'favourable' if revenue_var >= 0 else 'adverse'"
+  gp_var_label: "'fav' if gp_var >= 0 else 'adv'"
+  ebitda_var_label: "'favourable' if ebitda_var >= 0 else 'adverse'"
+
+system_prompt: |
+  You are a management accountant writing the narrative section of a management
+  accounts pack. Your audience is the board and finance director. You write in
+  UK accounting conventions — favourable and adverse, not positive and negative.
+  Every sentence carries analytical weight. No filler phrases. No headings —
+  output is a single flowing narrative paragraph.
+
+user_prompt_template: |
+  Write a professional, board-ready summary (4–6 sentences) covering the following budget vs actual P&L results:
+
+  - Period: {period}
+  - Revenue: actual £{actual_revenue:,.0f} vs budget £{budget_revenue:,.0f} ({revenue_var_pct}% {revenue_var_label})
+  - Gross Profit: actual £{actual_gross_profit:,.0f} vs budget £{budget_gross_profit:,.0f} (£{gp_var:,.0f} {gp_var_label})
+  - EBITDA: actual £{actual_ebitda:,.0f} vs budget £{budget_ebitda:,.0f} ({ebitda_var_pct}% {ebitda_var_label})
+  - Key variance drivers: {key_variances}
+
+  Requirements:
+  1. Open with the EBITDA outturn vs budget
+  2. Explain revenue performance in one sentence
+  3. Comment on gross margin movement
+  4. Reference the key variance drivers
+  5. Close with outlook or management actions
+  6. Use UK accounting conventions (favourable/adverse not positive/negative)
+
+  Output only the narrative paragraph. No preamble or headings.
+
+output_spec:
+  format: paragraph
+  length: "4–6 sentences"
+  conventions:
+    currency: GBP
+    favourability: "favourable/adverse"
+    person: third
+
+error_handling:
+  zero_budget: "If any budget field is zero, skip that percentage variance and state absolute only."
+  both_ebitda_negative: "Use 'narrower loss' or 'wider loss' framing. Do not use plain (F)/(A)."
+
+video_hook: "I pasted one P&L table into Claude and got boardroom-ready commentary in 8 seconds"
+
+example_input:
+  period: "July 2026"
+  actual_revenue: 168000
+  budget_revenue: 160000
+  actual_gross_profit: 88100
+  budget_gross_profit: 84000
+  actual_ebitda: 33000
+  budget_ebitda: 27800
+  key_variances: "Above-plan volumes in the enterprise segment following two contract renewals in the month. Marketing spend £2,800 over budget due to campaign pulled forward from Q4."
+
+example_output: |
+  EBITDA for July 2026 was £33,000, representing a favourable variance of £5,200 (18.7%) against budget. Revenue outperformed by £8,000 (5.0%), driven by above-plan volumes in the enterprise segment following two contract renewals in the month. Gross profit of £88,100 was £4,100 favourable, with the gross margin holding at 52.4% against a budgeted 52.5% — a negligible dilution driven by minor product mix movement. The favourable EBITDA position was partially offset by higher-than-budgeted marketing spend of £2,800, related to a planned campaign brought forward from Q4. The pipeline remains strong and management are forecasting full-year EBITDA to land within 2–3% of budget.

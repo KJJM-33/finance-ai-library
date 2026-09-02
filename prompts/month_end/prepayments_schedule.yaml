@@ -1,0 +1,104 @@
+id: prepayments_schedule
+version: 1.0.0
+title: "Prepayments Schedule Commentary"
+category: month_end
+tags: [prepayments, schedule, month-end, balance-sheet]
+difficulty: beginner
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates commentary for the prepayments balance sheet note, explaining the
+  composition and movements for the period.
+
+purpose: >
+  Takes opening balance, new prepayments, releases, and a description of the
+  largest items, and produces a concise 3–4 sentence balance sheet note for
+  a management accounts pack.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: opening_balance
+    label: "Opening prepayments balance (£)"
+    type: number
+    required: true
+    example: 10400
+  - key: new_prepayments
+    label: "New prepayments added this period (£)"
+    type: number
+    required: true
+    example: 4200
+  - key: released
+    label: "Prepayments released/expensed this period (£)"
+    type: number
+    required: true
+    example: 400
+  - key: largest_items
+    label: "Largest prepayment items (description + £)"
+    type: textarea
+    required: true
+    example: |
+      Annual software licence £8,400 releasing at £700/month through June 2027.
+      Office insurance premium prepaid in April £3,600 releasing at £300/month.
+      New two-year maintenance contract prepayment £4,200 added in July.
+
+computed_fields:
+  closing_balance: "opening_balance + new_prepayments - released"
+  movement: "closing_balance - opening_balance"
+
+system_prompt: |
+  You are a management accountant writing the prepayments note for a management
+  accounts pack under FRS 102. You confirm that each item meets the prepayment
+  criteria (cost spread over the benefit period), name the largest items by
+  description and amount, and note expected release profiles. Every sentence
+  carries analytical weight. No filler phrases. Output is a single flowing
+  paragraph — no headings.
+
+user_prompt_template: |
+  Write a concise balance sheet note (3–4 sentences) for the following prepayments schedule:
+
+  - Period: {period}
+  - Opening balance: £{opening_balance:,.0f}
+  - New prepayments: £{new_prepayments:,.0f}
+  - Released to P&L: £{released:,.0f}
+  - Closing balance: £{closing_balance:,.0f} (movement: £{movement:+,.0f})
+  - Largest items: {largest_items}
+
+  Requirements:
+  1. State the closing balance and movement direction
+  2. Name the largest 2–3 items by description and amount
+  3. Confirm the accounting treatment (costs spread over the benefit period)
+  4. Note expected release profile if relevant
+
+  Output only the note paragraph. No headings.
+
+output_spec:
+  format: paragraph
+  length: "3–4 sentences"
+  conventions:
+    currency: GBP
+    person: third
+
+error_handling:
+  negative_closing_balance: "Flag as anomalous — prepayments balance should not be negative."
+  no_largest_items: "State the closing balance and movement only; note that item-level detail was not provided."
+
+video_hook: "How to explain your prepayments balance in 30 seconds using Claude"
+
+example_input:
+  period: "July 2026"
+  opening_balance: 10400
+  new_prepayments: 4200
+  released: 400
+  largest_items: |
+    Annual software licence £8,400 releasing at £700/month through June 2027.
+    Office insurance premium prepaid in April £3,600 releasing at £300/month.
+    New two-year maintenance contract prepayment £4,200 added in July.
+
+example_output: |
+  The prepayments balance at 31 July 2026 was £14,200, an increase of £3,800 from the prior month opening position of £10,400. The balance is predominantly comprised of the annual software licence prepayment (£8,400, releasing at £700/month through June 2027) and the office insurance premium prepaid in April (£3,600, releasing at £300/month). A new prepayment of £4,200 was recognised in the period for the two-year maintenance contract signed in July, representing costs spread over the benefit period in accordance with FRS 102. All items have been reviewed and confirmed as meeting the prepayment criteria.

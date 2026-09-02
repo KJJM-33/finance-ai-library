@@ -1,0 +1,171 @@
+id: variance_commentary
+version: 1.0.0
+title: "Variance Commentary — Materiality-Screened P&L Analysis"
+category: variance
+tags: [variance, management-accounts, materiality, commentary, board-pack]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Materiality-screened variance commentary for management accounts.
+  Applies configurable absolute and percentage thresholds to a full P&L
+  line-item list and writes board-ready narrative for material variances only.
+
+purpose: >
+  Produce a materiality-screened variance commentary for management accounts,
+  suitable for board packs and CFO updates. Takes a full list of P&L line items
+  (actuals vs budget), applies configurable materiality thresholds, and produces
+  structured narrative covering only the variances that matter. Items below the
+  materiality threshold are acknowledged but not discussed in detail.
+
+inputs:
+  - key: period
+    label: "Reporting period (e.g. October 2025)"
+    type: text
+    required: true
+    example: "October 2025"
+  - key: reporting_entity
+    label: "Entity name (leave blank if not applicable)"
+    type: text
+    required: false
+    example: "Keyaan Consulting Ltd"
+  - key: line_items
+    label: "Line items (JSON array: [{name, category, actual, budget, prior_year?}])"
+    type: textarea
+    required: true
+    is_array: true
+    example: '[{"name":"Revenue","category":"revenue","actual":485000,"budget":510000},{"name":"Staff Costs","category":"cost","actual":180000,"budget":172000},{"name":"EBITDA","category":"profit","actual":110300,"budget":119500}]'
+  - key: materiality_threshold_abs
+    label: "Absolute materiality threshold (£)"
+    type: number
+    required: true
+    example: 5000
+  - key: materiality_threshold_pct
+    label: "Percentage materiality threshold (%)"
+    type: number
+    required: true
+    example: 3.0
+  - key: materiality_rule
+    label: "Materiality rule"
+    type: text
+    required: false
+    example: "either"
+  - key: analyst_notes
+    label: "Analyst notes (JSON array of strings, max 6)"
+    type: textarea
+    required: false
+    is_array: true
+    example: '["Revenue shortfall from two delayed contract signatures","Staff cost overspend: two contractors brought forward from November"]'
+  - key: tone
+    label: "Tone (concise / executive / detailed)"
+    type: text
+    required: true
+    example: "executive"
+
+computed_fields: {}
+
+system_prompt: |
+  You are a senior management accountant and FP&A analyst with 15 years of experience writing variance commentary for FTSE-listed and private equity-backed businesses. Your audience is the CFO and board — numerate, time-poor, and intolerant of vague language.
+
+  Rules you must follow:
+  1. Apply the materiality screen before writing commentary. Calculate the absolute variance (actual minus budget) and percentage variance ((actual minus budget) / budget * 100) for every line item. A line item is material if it meets the materiality_rule condition (either or both thresholds breached). Write detailed commentary only for material items.
+  2. For cost line items, actual < budget is favourable (F) (underspend). For revenue and profit line items, actual > budget is favourable (F). Label every variance (F) or (A) in parentheses after the figure.
+  3. Format all monetary values in GBP with comma separators (e.g. £1,250,000). For values above £1m, you may use shorthand (e.g. £1.25m) if used consistently throughout the response.
+  4. Never use filler phrases: "it is worth noting", "it should be highlighted", "please note", "as can be seen", "in terms of".
+  5. Do not invent drivers. Only reference analyst notes provided. If no analyst notes are given, narrate the variance from the numbers alone.
+  6. If actual and budget are both the same sign and the percentage variance is meaningful, state it. If a variance crosses zero or produces a misleading percentage (e.g. >100% on a near-zero budget), state the absolute movement only and describe it narratively.
+  7. Acknowledge immaterial items in a single sentence at the end — do not comment on them individually.
+  8. Write in third-person professional register ("Revenue underperformed budget...", not "We saw revenue miss budget...").
+  9. Do not include bullet points unless tone is "detailed".
+  10. If line item subtotals (e.g. Gross Profit, EBITDA) are provided alongside their constituent lines, verify that they reconcile. If they do not, note the discrepancy rather than ignoring it.
+
+user_prompt_template: |
+  Produce a variance commentary for {period} — {reporting_entity}.
+
+  MATERIALITY SCREEN
+  ------------------
+  Rule: {materiality_rule} threshold must be breached for a variance to be called out.
+  Absolute threshold: £{materiality_threshold_abs:,}
+  Percentage threshold: {materiality_threshold_pct}%
+
+  LINE ITEM DATA (Actual vs Budget)
+  ----------------------------------
+  {line_items}
+
+  ANALYST NOTES
+  -------------
+  {analyst_notes}
+
+  Tone: {tone}
+
+  Please produce a variance commentary with these four sections:
+
+  ## Headline
+  One sentence stating the overall financial position for the period — ahead of, behind, or in line with budget. Lead with the most significant variance driver.
+
+  ## Material Variances
+  For each line item that breaches the materiality threshold, state: name, actual value, budget value, absolute variance, percentage variance, (F)/(A) label, and 1–2 sentences of narrative incorporating analyst notes where provided. Order by absolute variance size, largest first.
+
+  ## Net Position
+  1–3 sentences quantifying the combined impact of material variances on the bottom-line result, with (F)/(A) label.
+
+  ## Screened Out
+  One sentence only: confirm remaining items are within threshold and state how many were screened out.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "## Headline"
+      length: "1 sentence"
+      notes: "State overall result. Bold the key figure."
+    - name: "## Material Variances"
+      length: "1–2 sentences per item"
+      notes: "Absolute + % variance. Label (F)/(A). Reference analyst notes. Order by size."
+    - name: "## Net Position"
+      length: "1–3 sentences"
+      notes: "Quantify bottom-line impact. Label (F)/(A)."
+    - name: "## Screened Out"
+      length: "1 sentence"
+      notes: "State count of immaterial items. No detail."
+  conventions:
+    currency: GBP
+    favourability: "(F)/(A)"
+    person: third
+    tone_modes: [concise, executive, detailed]
+
+error_handling:
+  missing_fields: "If period, line_items, materiality_threshold_abs, materiality_threshold_pct, or tone is absent, return an error naming the missing field(s). Do not generate a narrative."
+  empty_line_items: "Return an error — cannot produce commentary with no data."
+  zero_budget: "Skip percentage variance for that line. State absolute variance only."
+  all_immaterial: "State this in ## Headline and skip ## Material Variances."
+  invalid_materiality_rule: "Default to 'either' and proceed."
+  invalid_tone: "Default to 'executive' and proceed."
+
+example_input:
+  period: "October 2025"
+  reporting_entity: "Keyaan Consulting Ltd"
+  line_items: '[{"name":"Revenue","category":"revenue","actual":485000,"budget":510000},{"name":"Marketing","category":"cost","actual":22000,"budget":38000},{"name":"Staff Costs","category":"cost","actual":180000,"budget":172000},{"name":"EBITDA","category":"profit","actual":110300,"budget":119500}]'
+  materiality_threshold_abs: 8000
+  materiality_threshold_pct: 3.0
+  materiality_rule: "either"
+  analyst_notes: '["Revenue shortfall from two delayed contract signatures","Staff cost overspend: two contractors brought forward from November","Marketing underspend: campaign deferred to November"]'
+  tone: "executive"
+
+example_output: |
+  ## Headline
+  **EBITDA of £110,300 fell £9,200 (7.7%) short of budget (A)**, with a marketing underspend partially offsetting a revenue miss and a contractor-driven staff cost overspend.
+
+  ## Material Variances
+  **Marketing — £22,000 actual vs £38,000 budget: £16,000 favourable (F) (42.1%)**
+  Marketing delivered a £16,000 underspend against budget as a planned campaign was deferred to November due to resource constraints. This saving is a timing difference and is expected to reverse in the following period.
+
+  **Revenue — £485,000 actual vs £510,000 budget: £25,000 adverse (A) (4.9%)**
+  Revenue underperformed budget by £25,000, attributable to the delayed signature of two contracts expected to close within the period.
+
+  ## Net Position
+  Material variances produced a net adverse impact of £9,200 on EBITDA (A), with the £16,000 marketing underspend (F) providing partial offset against the £25,000 revenue shortfall (A) and £8,000 contractor overspend (A).
+
+  ## Screened Out
+  All other line items were within the materiality thresholds of £8,000 absolute / 3%.

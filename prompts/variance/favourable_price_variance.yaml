@@ -1,0 +1,107 @@
+id: favourable_price_variance
+version: 1.0.0
+title: "Favourable Price Variance Commentary"
+category: variance
+tags: [variance, price, favourable, management-accounts]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates board-ready commentary for favourable price variances, highlighting
+  what drove the saving and sustainability outlook.
+
+purpose: >
+  Takes actual and budgeted unit prices, volume, and optional context to produce
+  a concise 3–5 sentence commentary explaining the saving, its cause, whether it
+  is recurring or one-off, and a management recommendation.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "June 2026"
+  - key: cost_centre
+    label: "Cost centre or category (e.g. Raw Materials, IT Licensing)"
+    type: text
+    required: true
+    example: "Raw Materials"
+  - key: actual_price
+    label: "Actual unit price (£)"
+    type: number
+    required: true
+    example: 87.50
+  - key: budgeted_price
+    label: "Budgeted unit price (£)"
+    type: number
+    required: true
+    example: 100.00
+  - key: volume
+    label: "Volume purchased/used"
+    type: number
+    required: true
+    example: 1600
+  - key: context
+    label: "Driver of saving (e.g. renegotiated contract, bulk buy)"
+    type: textarea
+    required: false
+    example: "Renegotiation of primary supplier contract following a competitive tender process completed in Q1."
+
+computed_fields:
+  saving_per_unit: "budgeted_price - actual_price"
+  total_saving: "round(saving_per_unit * volume, 0)"
+  saving_pct: "round((saving_per_unit / budgeted_price) * 100, 1)"
+
+system_prompt: |
+  You are a management accountant writing variance commentary for a board pack.
+  You specialise in explaining pricing wins clearly: what drove the saving, whether
+  it is recurring or one-off, and what management should do next. You write in UK
+  management accounting conventions — favourable and adverse. No filler phrases.
+
+user_prompt_template: |
+  Write a concise, professional explanation (3–5 sentences) for the following favourable price variance:
+
+  - Period: {period}
+  - Category: {cost_centre}
+  - Budgeted price: £{budgeted_price:,.2f} per unit
+  - Actual price: £{actual_price:,.2f} per unit
+  - Saving per unit: £{saving_per_unit:,.2f} ({saving_pct}% favourable)
+  - Volume: {volume:,} units
+  - Total saving: £{total_saving:,.0f} favourable
+  - Driver: {context}
+
+  Requirements:
+  1. Lead with the total saving in £
+  2. Explain what drove the lower price
+  3. Comment on whether the saving is one-off or recurring
+  4. Use professional UK management accounting language
+  5. End with a recommendation (e.g. lock in contract, monitor supplier quality)
+
+  Output only the commentary paragraph. No preamble.
+
+output_spec:
+  format: paragraph
+  length: "3–5 sentences"
+  conventions:
+    currency: GBP
+    favourability: "favourable/adverse"
+    person: third
+
+error_handling:
+  zero_budget_price: "Cannot compute saving percentage — state absolute saving only."
+  no_context: "Note driver is not specified and comment on sustainability conservatively."
+
+video_hook: "How I use Claude to write favourable variance commentary that actually impresses the CFO"
+
+example_input:
+  period: "June 2026"
+  cost_centre: "Raw Materials"
+  actual_price: 87.50
+  budgeted_price: 100.00
+  volume: 1600
+  context: "Renegotiation of primary supplier contract following a competitive tender process completed in Q1."
+
+example_output: |
+  A favourable price variance of £20,000 was recorded on raw materials in June 2026, representing a 12.5% saving against the budgeted rate of £100.00 per unit. This was driven by the renegotiation of the primary supplier contract following a competitive tender process completed in Q1. The saving is expected to persist through the remainder of FY2026 as the contract runs to March 2027. Management recommend reviewing the FY2027 budget assumption to reflect the new contracted rate and monitoring supplier quality metrics to confirm no service-level trade-offs from the lower price.

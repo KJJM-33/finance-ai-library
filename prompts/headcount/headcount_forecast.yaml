@@ -1,0 +1,179 @@
+id: headcount_forecast
+version: 1.0.0
+title: "Headcount Forecast Narrative"
+category: headcount
+tags: [headcount, workforce-planning, forecast, people-cost]
+difficulty: intermediate
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Produces a headcount forecast commentary covering FTE movements and associated
+  payroll cost impact for management accounts.
+
+purpose: >
+  Designed for management accountants and FP&A analysts preparing the monthly or
+  quarterly people-cost section within board packs, management accounts, or
+  reforecast submissions. Produces four sections: FTE Movement Summary,
+  Departmental Breakdown, Payroll Cost Variance, Risk and Outlook.
+
+inputs:
+  - key: period
+    label: "Reporting period (e.g. October 2025)"
+    type: text
+    required: true
+    example: "September 2025"
+  - key: opening_headcount
+    label: "Opening headcount (FTE)"
+    type: number
+    required: true
+    example: 187
+  - key: starters
+    label: "Starters (FTE)"
+    type: number
+    required: true
+    example: 2
+  - key: leavers
+    label: "Leavers (FTE)"
+    type: number
+    required: true
+    example: 5
+  - key: closing_headcount
+    label: "Closing headcount (FTE)"
+    type: number
+    required: true
+    example: 184
+  - key: budget_headcount
+    label: "Budgeted headcount for the period (FTE)"
+    type: number
+    required: true
+    example: 190
+  - key: actual_payroll_cost
+    label: "Actual payroll cost (£)"
+    type: number
+    required: true
+    example: 1534200
+  - key: budget_payroll_cost
+    label: "Budget payroll cost (£)"
+    type: number
+    required: true
+    example: 1612500
+  - key: departments
+    label: "Departmental movements (JSON array: [{name, net_change}])"
+    type: textarea
+    required: false
+    is_array: true
+    example: '[{"name":"Technology","net_change":1},{"name":"Operations","net_change":1},{"name":"Consulting","net_change":-3},{"name":"Finance","net_change":0},{"name":"Sales & Marketing","net_change":-2}]'
+  - key: commentary_notes
+    label: "Analyst notes — context or known drivers to incorporate"
+    type: textarea
+    required: false
+    example: "Three leavers in Consulting were voluntary resignations and two end-of-contract departures. Delayed recruitment in Q2 continues to cause headcount to track below budget."
+
+computed_fields: {}
+
+system_prompt: |
+  You are a senior management accountant and FP&A analyst with expertise in people-cost reporting and workforce planning commentary. You are writing the headcount and payroll section of a management accounts pack for a finance director audience.
+
+  Formatting and calculation rules you must always follow:
+  1. Always state the net FTE movement (closing minus opening) in the first sentence of the FTE Movement Summary.
+  2. Express payroll variance in both absolute GBP terms and as a percentage of budget: ((actual - budget) / budget) * 100, rounded to one decimal place. Adverse variances (actual > budget for costs) must be labelled explicitly as "adverse".
+  3. FTE figures must be expressed to one decimal place throughout (e.g. 47.0, not 47).
+  4. All monetary figures must be formatted in GBP with comma separators (e.g. £1,234,567).
+  5. Flag any department where actual headcount is over budget by more than 10% with the label [OVER BUDGET — REVIEW REQUIRED].
+  6. Do not invent data. If a field is missing or ambiguous, note the gap rather than assume.
+  7. Reconcile opening + starters - leavers = closing and flag if the figures provided do not balance.
+  8. Write in third-person professional register. No filler phrases. No hedging language.
+
+user_prompt_template: |
+  Please produce a headcount forecast commentary for {period} using the data below.
+
+  HEADCOUNT MOVEMENT DATA
+  -----------------------
+  Opening Headcount:   {opening_headcount:.1f} FTE
+  Starters:            {starters:.1f} FTE
+  Leavers:             {leavers:.1f} FTE
+  Closing Headcount:   {closing_headcount:.1f} FTE
+  Budget Headcount:    {budget_headcount:.1f} FTE
+
+  PAYROLL COST DATA
+  -----------------
+  Actual Payroll Cost:  £{actual_payroll_cost:,.0f}
+  Budget Payroll Cost:  £{budget_payroll_cost:,.0f}
+
+  DEPARTMENTAL HEADCOUNT NET CHANGES
+  -----------------------------------
+  {departments}
+
+  ANALYST NOTES
+  -------------
+  {commentary_notes}
+
+  Please structure your response with the following four sections exactly as labelled:
+
+  1. FTE Movement Summary
+     Summarise total FTE movement for the period, starters and leavers, variance to budget headcount, and the overall direction of travel. Lead with net FTE movement in the opening sentence.
+
+  2. Departmental Breakdown
+     Provide a bullet-point breakdown of headcount movements by department. For each department, state the net FTE change and any notable context drawn from the analyst notes. Apply the [OVER BUDGET — REVIEW REQUIRED] flag where applicable.
+
+  3. Payroll Cost Variance
+     State the absolute and percentage variance of actual payroll cost against budget. Indicate whether the variance is favourable or adverse. Where payroll variance direction conflicts with headcount variance direction, highlight this and suggest a likely explanation.
+
+  4. Risk and Outlook
+     Identify up to three forward-looking risks or opportunities related to headcount and people cost. Draw on the analyst notes and variance patterns observed. Close with a one-sentence outlook statement.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "1. FTE Movement Summary"
+    - name: "2. Departmental Breakdown"
+      notes: "Bullet-point format. [OVER BUDGET — REVIEW REQUIRED] flag where applicable."
+    - name: "3. Payroll Cost Variance"
+    - name: "4. Risk and Outlook"
+  conventions:
+    fte_format: "To 1 decimal place (e.g. 52.0 FTE)"
+    currency: "GBP, comma separators"
+    variance_labels: "favourable (F) / adverse (A)"
+    length: "250–400 words total"
+
+error_handling:
+  reconciliation_failure: "State the discrepancy in FTE Movement Summary. Use the supplied closing_headcount for downstream calculations."
+  missing_required: "If period, opening_headcount, closing_headcount, budget_headcount, actual_payroll_cost, or budget_payroll_cost is missing, return an error."
+  zero_budget: "State absolute variance only and note percentage not meaningful."
+  empty_departments: "Omit departmental breakdown beyond a single line noting no departmental data was supplied."
+  empty_commentary_notes: "Do not invent drivers. Risk and Outlook section relies only on numeric variances."
+
+example_input:
+  period: "September 2025"
+  opening_headcount: 187
+  starters: 2
+  leavers: 5
+  closing_headcount: 184
+  budget_headcount: 190
+  actual_payroll_cost: 1534200
+  budget_payroll_cost: 1612500
+  departments: '[{"name":"Technology","net_change":1},{"name":"Operations","net_change":1},{"name":"Consulting","net_change":-3},{"name":"Finance","net_change":0},{"name":"Sales & Marketing","net_change":-2}]'
+  commentary_notes: "Three leavers in Consulting were voluntary resignations and two end-of-contract departures. Delayed recruitment in Q2 continues to cause headcount to track below budget. Sales & Marketing has two roles held above budget pending restructure sign-off."
+
+example_output: |
+  ### 1. FTE Movement Summary
+  The business recorded a net reduction of 3.0 FTE during September 2025, closing the period at 184.0 FTE against an opening position of 187.0 FTE. Two starters joined during the month across the Technology and Operations functions, while five leavers were processed. Closing headcount of 184.0 FTE sits 6.0 FTE below the September budget of 190.0 FTE, representing a 3.2% undershoot.
+
+  ### 2. Departmental Breakdown
+  - **Technology**: +1.0 FTE (one software engineer joined mid-month)
+  - **Operations**: +1.0 FTE (graduate intake starter)
+  - **Consulting**: -3.0 FTE (three voluntary resignations and two end-of-contract departures; 61.0 FTE vs 68.0 FTE budget)
+  - **Finance**: 0.0 FTE (no movement)
+  - **Sales & Marketing**: -2.0 FTE (43.0 FTE vs 39.0 FTE budget) **[OVER BUDGET — REVIEW REQUIRED]** — two roles held pending restructure sign-off
+
+  ### 3. Payroll Cost Variance
+  Actual payroll cost for September 2025 was **£1,534,200**, against a budget of **£1,612,500**, generating a **favourable (F)** variance of **£78,300 (4.9% F)**. The favourable position is consistent with the headcount undershoot of 6.0 FTE.
+
+  ### 4. Risk and Outlook
+  1. **Consulting capacity risk**: At 61.0 FTE against a budget of 68.0 FTE, the Consulting function may face a resourcing constraint if project demand recovers in Q4.
+  2. **Sales & Marketing overage**: Two roles held above budget pending restructure approval represent approximately £18,000 per month in unbudgeted cost.
+  3. **Delayed starter pipeline**: Three budgeted October starters create a risk of further headcount undershoot through the month.
+
+  **Outlook**: Assuming October starters join as planned and Consulting recruitment delivers two hires by November, headcount is expected to recover to within 2.0 FTE of budget by Q4 close.

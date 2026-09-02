@@ -1,0 +1,120 @@
+id: departmental_spend_commentary
+version: 1.0.0
+title: "Departmental Spend Commentary"
+category: headcount
+tags: [department, spend, commentary, headcount, opex]
+difficulty: beginner
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a professional one-paragraph commentary on departmental spend for
+  inclusion in a management accounts pack or board report.
+
+purpose: >
+  Takes actual and budget spend, prior month actuals, headcount vs budget, and
+  key movement notes, and produces a 3–5 sentence paragraph covering the budget
+  variance, headcount position, key spend movements, and any trend worth
+  monitoring.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: department
+    label: "Department name"
+    type: text
+    required: true
+    example: "Operations"
+  - key: actual_spend
+    label: "Actual spend (£)"
+    type: number
+    required: true
+    example: 82400
+  - key: budget_spend
+    label: "Budget spend (£)"
+    type: number
+    required: true
+    example: 77800
+  - key: prior_month_spend
+    label: "Prior month actual spend (£)"
+    type: number
+    required: true
+    example: 79600
+  - key: headcount_actual
+    label: "Actual headcount"
+    type: number
+    required: true
+    example: 12
+  - key: headcount_budget
+    label: "Budgeted headcount"
+    type: number
+    required: true
+    example: 12
+  - key: key_movements
+    label: "Key spend movements to highlight (optional)"
+    type: textarea
+    required: false
+    example: "Higher contractor costs of £3,200 following temporary backfill of the Operations Manager role. One-off equipment repair of £1,400 not in budget."
+
+computed_fields:
+  budget_var: "actual_spend - budget_spend"
+  budget_var_pct: "round((budget_var / budget_spend) * 100, 1)"
+  mom_movement: "actual_spend - prior_month_spend"
+  hc_var: "int(headcount_actual - headcount_budget)"
+  budget_var_label: "'adverse' if budget_var > 0 else 'favourable'"
+
+system_prompt: |
+  You are a management accountant writing the departmental commentary section of
+  a management accounts pack for a finance director audience. You connect headcount
+  movements to cost variances and flag trends worth monitoring. Concise, professional,
+  UK accounting conventions. No filler phrases. Output is a single paragraph —
+  no headings.
+
+user_prompt_template: |
+  Write a concise, professional paragraph (3–5 sentences) for the {department} department in {period}:
+
+  - Actual spend: £{actual_spend:,.0f}
+  - Budget spend: £{budget_spend:,.0f}
+  - Budget variance: £{budget_var:,.0f} ({budget_var_label}, {budget_var_pct}%)
+  - Prior month spend: £{prior_month_spend:,.0f} (movement: £{mom_movement:+,.0f})
+  - Headcount: {headcount_actual} actual vs {headcount_budget} budget ({hc_var:+d})
+  - Key movements: {key_movements}
+
+  Requirements:
+  1. State the budget variance clearly (£ and %)
+  2. Comment on headcount vs budget
+  3. Highlight the key spend movements
+  4. Use professional, concise language suitable for a finance director audience
+
+  Output only the commentary paragraph.
+
+output_spec:
+  format: paragraph
+  length: "3–5 sentences"
+  conventions:
+    currency: GBP
+    favourability: "favourable/adverse"
+    person: third
+
+error_handling:
+  zero_budget: "State absolute variance only."
+  no_key_movements: "Comment on the budget variance and headcount position without attributing to specific drivers."
+
+video_hook: "I use this one Claude prompt to write every department commentary section — takes 8 seconds"
+
+example_input:
+  period: "July 2026"
+  department: "Operations"
+  actual_spend: 82400
+  budget_spend: 77800
+  prior_month_spend: 79600
+  headcount_actual: 12
+  headcount_budget: 12
+  key_movements: "Higher contractor costs of £3,200 following temporary backfill of the Operations Manager role. One-off equipment repair of £1,400 not in budget."
+
+example_output: |
+  The Operations department recorded spend of £82,400 in July 2026, representing an adverse variance of £4,600 (5.9%) against budget. Headcount of 12 is in line with the budgeted establishment, with no new starters or leavers in the month. The overspend was driven by higher contractor costs of £3,200 following the temporary backfill of the Operations Manager role, plus a one-off equipment repair of £1,400 not included in budget. Month-on-month spend increased by £2,800 from June's position of £79,600, consistent with the additional contractor activity. The contractor arrangement is expected to end in August when the permanent hire commences.

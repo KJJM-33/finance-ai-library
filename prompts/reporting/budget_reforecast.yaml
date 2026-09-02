@@ -1,0 +1,226 @@
+id: budget_reforecast
+version: 1.0.0
+title: "Budget Reforecast — Full-Year Outlook Commentary"
+category: reporting
+tags: [reforecast, budget, fp-and-a, full-year-outlook, management-accounts]
+difficulty: advanced
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates structured reforecast commentary suitable for board packs, CFO updates,
+  and audit committee presentations. Explains the movement from budget, the
+  assumptions underpinning the reforecast, and key risks and opportunities.
+
+purpose: >
+  Takes YTD actuals, the original approved budget, and a revised full-year estimate,
+  then produces a five-section narrative: Headline → YTD Performance → Reforecast
+  Assumptions → Full-Year Bridge → Risk and Opportunity. Ready to paste directly
+  into a management accounts pack or board slide deck.
+
+inputs:
+  - key: period
+    label: "Latest month of actuals (e.g. October 2025)"
+    type: text
+    required: true
+    example: "October 2025"
+  - key: months_elapsed
+    label: "Number of complete months in YTD figures (1–11)"
+    type: number
+    required: true
+    example: 10
+  - key: ytd_actual_revenue
+    label: "YTD actual revenue (£)"
+    type: number
+    required: true
+    example: 41200000
+  - key: ytd_budget_revenue
+    label: "YTD budget revenue (£)"
+    type: number
+    required: true
+    example: 43500000
+  - key: ytd_actual_opex
+    label: "YTD actual operating expenditure (£)"
+    type: number
+    required: true
+    example: 28100000
+  - key: ytd_budget_opex
+    label: "YTD budget operating expenditure (£)"
+    type: number
+    required: true
+    example: 29800000
+  - key: ytd_actual_ebitda
+    label: "YTD actual EBITDA (£)"
+    type: number
+    required: true
+    example: 13100000
+  - key: ytd_budget_ebitda
+    label: "YTD budget EBITDA (£)"
+    type: number
+    required: true
+    example: 13700000
+  - key: fy_budget_revenue
+    label: "Full-year approved budget revenue (£)"
+    type: number
+    required: true
+    example: 52200000
+  - key: fy_budget_opex
+    label: "Full-year approved budget OpEx (£)"
+    type: number
+    required: true
+    example: 35760000
+  - key: fy_budget_ebitda
+    label: "Full-year approved budget EBITDA (£)"
+    type: number
+    required: true
+    example: 16440000
+  - key: fy_reforecast_revenue
+    label: "Revised full-year revenue estimate (£)"
+    type: number
+    required: true
+    example: 50100000
+  - key: fy_reforecast_opex
+    label: "Revised full-year OpEx estimate (£)"
+    type: number
+    required: true
+    example: 34560000
+  - key: fy_reforecast_ebitda
+    label: "Revised full-year EBITDA estimate (£)"
+    type: number
+    required: true
+    example: 15540000
+  - key: key_assumptions
+    label: "Key reforecast assumptions (JSON array of strings, max 5)"
+    type: textarea
+    required: false
+    is_array: true
+    example: '["Q4 pipeline conversion rate revised down from 35% to 22% following September close data","Headcount freeze for November and December — two open roles deferred to FY2026","November enterprise contract now expected to close in January 2026 — £800k slippage"]'
+  - key: tone
+    label: "Tone (concise / executive / detailed)"
+    type: text
+    required: true
+    example: "executive"
+
+computed_fields: {}
+
+system_prompt: |
+  You are a senior FP&A analyst with 15 years of experience preparing budget reforecasts and full-year outlooks for FTSE-listed and private equity-backed businesses. Your audience is the CFO, finance director, and non-executive board members.
+
+  Rules you must follow without exception:
+  1. Use GBP (£) for all monetary values. Format numbers with commas and the £ sign (e.g. £1,250,000 or £1.25m for large figures — be consistent within a single response).
+  2. Never use filler phrases such as "it is worth noting", "it should be highlighted", "please note", "as can be seen", "in terms of", or "going forward".
+  3. Structure every response as: Headline → YTD Performance → Reforecast Assumptions → Full-Year Bridge → Risk and Opportunity. Use markdown sub-headings exactly as specified.
+  4. State variances as favourable (F) or adverse (A). For costs, an underspend is (F) and an overspend is (A).
+  5. Be direct. Every sentence must carry analytical weight.
+  6. Default maximum length is 300 words. If tone is "detailed", you may extend to 500 words.
+  7. Do not use bullet points unless tone is "detailed", and only in the Reforecast Assumptions and Risk and Opportunity sections.
+  8. Write in third-person professional register.
+  9. Do not apply a plain (F) or (A) label to EBITDA movements where both values are negative — describe these as "narrower loss" or "wider loss".
+  10. Do not compute or state a percentage variance where the comparison crosses zero.
+  11. When stating the full-year reforecast vs budget variance, always frame it relative to the original approved budget.
+
+user_prompt_template: |
+  Produce a budget reforecast commentary for the period to {period} using the data below. Follow the output structure exactly: five markdown sub-headings — ## Headline, ## YTD Performance, ## Reforecast Assumptions, ## Full-Year Bridge, ## Risk and Opportunity.
+
+  **Year-to-Date Actuals ({months_elapsed} months to {period}):**
+  - YTD Actual Revenue: £{ytd_actual_revenue:,.0f}
+  - YTD Budget Revenue: £{ytd_budget_revenue:,.0f}
+  - YTD Revenue Variance: calculated by you
+  - YTD Actual OpEx: £{ytd_actual_opex:,.0f}
+  - YTD Budget OpEx: £{ytd_budget_opex:,.0f}
+  - YTD OpEx Variance: calculated by you
+  - YTD Actual EBITDA: £{ytd_actual_ebitda:,.0f}
+  - YTD Budget EBITDA: £{ytd_budget_ebitda:,.0f}
+  - YTD EBITDA Variance: calculated by you
+
+  **Full-Year Original Budget:**
+  - FY Budget Revenue: £{fy_budget_revenue:,.0f}
+  - FY Budget OpEx: £{fy_budget_opex:,.0f}
+  - FY Budget EBITDA: £{fy_budget_ebitda:,.0f}
+
+  **Full-Year Reforecast:**
+  - FY Reforecast Revenue: £{fy_reforecast_revenue:,.0f}
+  - FY Reforecast OpEx: £{fy_reforecast_opex:,.0f}
+  - FY Reforecast EBITDA: £{fy_reforecast_ebitda:,.0f}
+  - FY EBITDA vs Budget: calculated by you
+
+  **Key Assumptions driving the reforecast:**
+  {key_assumptions}
+
+  **Tone:** {tone}
+
+  Requirements:
+  - ## Headline: one sentence stating the full-year EBITDA reforecast vs original budget.
+  - ## YTD Performance: 2–3 sentences summarising YTD EBITDA vs budget. State proportion of year elapsed.
+  - ## Reforecast Assumptions: 2–4 sentences (or bullets if detailed) explaining changes to remaining months outlook.
+  - ## Full-Year Bridge: 2–3 sentences quantifying the bridge from FY budget EBITDA to FY reforecast EBITDA. Label (F) or (A) on each component. Confirm bridge reconciles.
+  - ## Risk and Opportunity: 1–3 sentences (or bullets if detailed) stating the principal risk and principal upside. Be specific.
+  - No filler phrases. GBP formatting throughout.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "## Headline"
+      length: "1 sentence"
+      notes: "Bold key EBITDA figures. State whether ahead/behind/in line."
+    - name: "## YTD Performance"
+      length: "2–3 sentences"
+      notes: "State YTD EBITDA absolute variance and %. Reference months elapsed."
+    - name: "## Reforecast Assumptions"
+      length: "2–4 sentences or bullets (detailed only)"
+      notes: "Reference at least one specific named assumption."
+    - name: "## Full-Year Bridge"
+      length: "2–3 sentences"
+      notes: "Quantify revenue and cost components. Confirm bridge reconciles."
+    - name: "## Risk and Opportunity"
+      length: "1–3 sentences or bullets (detailed only)"
+      notes: "One specific downside risk, one specific upside opportunity."
+  conventions:
+    currency: GBP
+    favourability: "(F)/(A)"
+    person: third
+    tone_modes: [concise, executive, detailed]
+
+error_handling:
+  invalid_months_elapsed: "If months_elapsed < 1 or > 11, return an error."
+  zero_budget: "State absolute variance only and note percentage not meaningful."
+  non_reconciling_bridge: "Note the residual in Full-Year Bridge rather than forcing reconciliation."
+  both_ebitda_negative: "Use 'narrower loss' / 'wider loss' framing on FY EBITDA vs budget."
+  sign_flip: "Do not compute percentage variance. State absolute movement narratively."
+  invalid_tone: "Default to 'executive' and proceed."
+  key_assumptions_over_5: "Use only the first 5."
+
+example_input:
+  period: "October 2025"
+  months_elapsed: 10
+  ytd_actual_revenue: 41200000
+  ytd_budget_revenue: 43500000
+  ytd_actual_opex: 28100000
+  ytd_budget_opex: 29800000
+  ytd_actual_ebitda: 13100000
+  ytd_budget_ebitda: 13700000
+  fy_budget_revenue: 52200000
+  fy_budget_opex: 35760000
+  fy_budget_ebitda: 16440000
+  fy_reforecast_revenue: 50100000
+  fy_reforecast_opex: 34560000
+  fy_reforecast_ebitda: 15540000
+  key_assumptions: '["Q4 pipeline conversion rate revised down from 35% to 22% following September close data","Headcount freeze in force for November and December — two open roles deferred to FY2026","November enterprise contract now expected to close in January 2026 — £800k slippage","Cost base reflects removal of £500k discretionary project spend approved in October"]'
+  tone: "executive"
+
+example_output: |
+  ## Headline
+  The business is forecast to deliver full-year EBITDA of **£15,540,000** against an approved budget of **£16,440,000**, a shortfall of **£900,000 (5.5%) (A)**, driven by a revenue miss that is partially offset by accelerated cost discipline.
+
+  ## YTD Performance
+  Through October 2025, representing 83% of the financial year, the business has delivered YTD EBITDA of £13,100,000 against a budget of £13,700,000, a variance of £600,000 (4.4%) (A). Revenue underperformed by £2,300,000 (5.3%) (A) against YTD budget, while OpEx came in £1,700,000 (5.7%) (F) below budget.
+
+  ## Reforecast Assumptions
+  The remaining two months of the year are expected to yield revenue of £8,900,000 against an original plan of £11,000,000, reflecting a downward revision to Q4 pipeline conversion from 35% to 22% and the deferral of an £800,000 enterprise contract into January 2026. On costs, the headcount freeze and removal of £500,000 of discretionary project spend reduce the remaining OpEx outlook, partially moderating the revenue underperformance.
+
+  ## Full-Year Bridge
+  The full-year EBITDA reforecast of £15,540,000 reflects a movement of £900,000 (A) against the approved budget of £16,440,000. The revenue shortfall of £2,100,000 (A) is the primary driver, partially offset by a cost underspend of £1,200,000 (F). These two components fully reconcile to the £900,000 (A) EBITDA variance.
+
+  ## Risk and Opportunity
+  The principal risk is further slippage on the November pipeline — if conversion rates deteriorate below 22%, the year-end EBITDA shortfall could widen by a further £400,000–£600,000. The primary upside is early closure of the deferred enterprise contract: if it lands in December, the revenue miss narrows by £800,000 and the full-year position approaches budget.

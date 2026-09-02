@@ -1,0 +1,125 @@
+id: close_checklist_generator
+version: 1.0.0
+title: "Month-End Close Checklist Generator"
+category: month_end
+tags: [month-end, close, checklist, process, management-accounts]
+difficulty: beginner
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a prioritised, role-specific month-end close checklist based on
+  your entity type, accounting system, close timeline, and team size.
+
+purpose: >
+  Produces a day-by-day checklist covering bank reconciliations, prepayments,
+  accruals, payroll journals, depreciation, intercompany, VAT, balance sheet
+  reconciliations, and management accounts pack. Flags special items as
+  HIGH PRIORITY. Includes a sign-off section.
+
+inputs:
+  - key: entity_type
+    label: "Entity type (e.g. SME, subsidiary, group consolidated)"
+    type: text
+    required: true
+    example: "SME"
+  - key: accounting_system
+    label: "Accounting system (e.g. Xero, Sage, SAP)"
+    type: text
+    required: true
+    example: "Xero"
+  - key: close_deadline
+    label: "Close deadline (e.g. 5 working days)"
+    type: text
+    required: true
+    example: "5 working days"
+  - key: team_size
+    label: "Finance team size"
+    type: number
+    required: true
+    example: 3
+  - key: special_items
+    label: "Special items this period (e.g. year-end, VAT return due, audit)"
+    type: textarea
+    required: false
+    example: "VAT return due this period. Year-end audit commences in two weeks."
+
+computed_fields: {}
+
+system_prompt: |
+  You are a senior management accountant helping finance teams run an efficient
+  month-end close. You generate detailed, role-specific checklists tailored to
+  the entity type, accounting system, and deadline. Every task is actionable and
+  assigned to a suggested owner role. Special items are flagged prominently.
+  Output is clean markdown suitable for pasting into a task management tool.
+
+user_prompt_template: |
+  Generate a detailed, prioritised month-end close checklist for the following entity:
+
+  - Entity type: {entity_type}
+  - Accounting system: {accounting_system}
+  - Close deadline: {close_deadline}
+  - Finance team size: {team_size} people
+  - Special items this period: {special_items}
+
+  Requirements:
+  1. Structure as Day 1 / Day 2 / Day 3+ sections based on the close timeline
+  2. Include: bank reconciliations, prepayments, accruals, payroll journals, depreciation, intercompany (if applicable), VAT, balance sheet reconciliations, management accounts pack
+  3. Flag any special items as HIGH PRIORITY
+  4. Keep each task to one line: [Priority] Task description — Owner suggestion
+  5. End with a "Sign-off" section covering review approvals
+
+  Output only the checklist in markdown format.
+
+output_spec:
+  format: markdown
+  sections:
+    - name: "### Day 1"
+    - name: "### Day 2"
+    - name: "### Day 3+"
+    - name: "### Sign-Off"
+  conventions:
+    priority_labels: "[HIGH] / [MEDIUM] / [LOW]"
+    task_format: "[Priority] Task description — Owner suggestion"
+
+error_handling:
+  invalid_team_size: "If team_size is 0 or not provided, assume a single-person finance function."
+  no_special_items: "Omit the HIGH PRIORITY flags if no special items are provided."
+
+video_hook: "Claude built my entire month-end close checklist in 15 seconds — here's the prompt"
+
+example_input:
+  entity_type: "SME"
+  accounting_system: "Xero"
+  close_deadline: "5 working days"
+  team_size: 3
+  special_items: "VAT return due this period."
+
+example_output: |
+  ## Month-End Close Checklist — [Period]
+
+  ### Day 1 (1st working day)
+  - [HIGH] Post payroll journals for the period — Management Accountant
+  - [HIGH] Download and reconcile bank statements for all accounts — Finance Assistant
+  - [HIGH] Process supplier invoices received before cut-off — Finance Assistant
+  - [HIGH] VAT return preparation — begin reconciliation of Box 1–7 [HIGH PRIORITY] — Management Accountant
+  - [MEDIUM] Post depreciation run in Xero — Management Accountant
+
+  ### Day 2
+  - [HIGH] Review and post accruals (utilities, rent, professional fees) — Management Accountant
+  - [HIGH] Confirm prepayments schedule and post release journals — Management Accountant
+  - [HIGH] Reconcile VAT control account — Finance Assistant
+  - [MEDIUM] Review aged debtors and flag overdue items — Finance Assistant
+
+  ### Day 3–5
+  - [HIGH] Prepare P&L and balance sheet draft — Management Accountant
+  - [HIGH] Complete balance sheet reconciliations (all accounts) — Management Accountant
+  - [HIGH] Submit VAT return via HMRC Making Tax Digital portal [HIGH PRIORITY] — Management Accountant
+  - [MEDIUM] Draft variance commentary
+  - [LOW] File documents and update task log
+
+  ### Sign-Off
+  - [ ] Management Accountant review — sign off by Day 4
+  - [ ] Finance Director approval — by Day 5
+  - [ ] Issue to board / senior management

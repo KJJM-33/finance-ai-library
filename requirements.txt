@@ -1,0 +1,10 @@
+# Core
+pyyaml>=6.0.1
+streamlit>=1.35.0
+
+# LLM providers — install whichever you use
+anthropic>=0.28.0
+openai>=1.30.0         # also covers Ollama, Groq, Mistral via base_url
+
+# Dev / test
+pytest>=8.0.0

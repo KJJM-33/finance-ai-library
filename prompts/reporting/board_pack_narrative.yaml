@@ -1,0 +1,134 @@
+id: board_pack_narrative
+version: 1.0.0
+title: "Board Pack Executive Summary Narrative"
+category: reporting
+tags: [board-pack, executive-summary, narrative, management-accounts, CFO]
+difficulty: advanced
+cima_relevant: true
+author: Keyaan Martin ACMA CGMA
+last_tested: "2026-08-29"
+
+description: >
+  Generates a concise, board-ready executive summary for a management accounts
+  pack — the single most important narrative page for a finance director or CFO.
+
+purpose: >
+  Takes headline P&L figures, cash position, top risks and opportunities, and
+  produces a 5–7 sentence executive summary paragraph covering EBITDA outturn,
+  revenue, cash, top risks, key opportunity, and full-year guidance. Written
+  for a board that includes non-finance non-executive directors.
+
+inputs:
+  - key: period
+    label: "Reporting period"
+    type: text
+    required: true
+    example: "July 2026"
+  - key: company_name
+    label: "Company name"
+    type: text
+    required: true
+    example: "Acme Widgets Ltd"
+  - key: revenue_actual
+    label: "Revenue actual (£)"
+    type: number
+    required: true
+    example: 168000
+  - key: revenue_budget
+    label: "Revenue budget (£)"
+    type: number
+    required: true
+    example: 160000
+  - key: ebitda_actual
+    label: "EBITDA actual (£)"
+    type: number
+    required: true
+    example: 33000
+  - key: ebitda_budget
+    label: "EBITDA budget (£)"
+    type: number
+    required: true
+    example: 27800
+  - key: cash_balance
+    label: "Month-end cash balance (£)"
+    type: number
+    required: true
+    example: 412000
+  - key: top_risks
+    label: "Top 2–3 risks or watch items for the board"
+    type: textarea
+    required: true
+    example: |
+      Delayed renewal of TechCo supply contract (£22k monthly revenue, under negotiation).
+      Rising logistics costs beginning to pressure gross margin.
+  - key: top_opportunities
+    label: "Top 1–2 opportunities or positive developments"
+    type: textarea
+    required: false
+    example: "New ERP implementation on budget — automated management pack expected in September."
+
+computed_fields:
+  revenue_var: "revenue_actual - revenue_budget"
+  revenue_var_pct: "round((revenue_var / revenue_budget) * 100, 1)"
+  ebitda_var: "ebitda_actual - ebitda_budget"
+  ebitda_var_pct: "round((ebitda_var / ebitda_budget) * 100, 1)"
+  revenue_var_label: "'fav' if revenue_var >= 0 else 'adv'"
+  ebitda_var_label: "'favourable' if ebitda_var >= 0 else 'adverse'"
+
+system_prompt: |
+  You are a CFO writing the executive summary page of a management accounts pack
+  for the board. Your audience includes non-finance non-executive directors —
+  avoid jargon, lead with headlines, and close with clear guidance. Every sentence
+  earns its place. No filler phrases. Output is a single flowing paragraph
+  — no headings or bullet points.
+
+user_prompt_template: |
+  Write a crisp, board-ready executive summary (5–7 sentences) covering {period} for {company_name}:
+
+  **Financial headlines:**
+  - Revenue: £{revenue_actual:,.0f} actual vs £{revenue_budget:,.0f} budget ({revenue_var_pct}% {revenue_var_label})
+  - EBITDA: £{ebitda_actual:,.0f} actual vs £{ebitda_budget:,.0f} budget ({ebitda_var_pct}% {ebitda_var_label})
+  - Cash: £{cash_balance:,.0f} at month end
+
+  **Risks:** {top_risks}
+  **Opportunities:** {top_opportunities}
+
+  Requirements:
+  1. Open with the headline EBITDA position in one punchy sentence
+  2. Cover revenue and cash in two short sentences
+  3. Name the top 2 risks without burying the board in detail
+  4. Note any key opportunity or win
+  5. Close with a forward-looking sentence — guidance for the remainder of the year
+  6. Avoid jargon. Write as if the board includes non-finance NEDs.
+
+  Output only the summary paragraph. No headings or bullet points.
+
+output_spec:
+  format: paragraph
+  length: "5–7 sentences"
+  conventions:
+    currency: GBP
+    person: third
+    audience: "board including non-finance NEDs"
+
+error_handling:
+  both_ebitda_negative: "Use 'narrower loss'/'wider loss' framing."
+  no_opportunities: "Close paragraph with risks section only and a forward-looking guidance sentence."
+
+video_hook: "I asked Claude to write the board pack executive summary — the CFO sent it unchanged"
+
+example_input:
+  period: "July 2026"
+  company_name: "Acme Widgets Ltd"
+  revenue_actual: 168000
+  revenue_budget: 160000
+  ebitda_actual: 33000
+  ebitda_budget: 27800
+  cash_balance: 412000
+  top_risks: |
+    Delayed renewal of TechCo supply contract (£22k monthly revenue, under negotiation).
+    Rising logistics costs beginning to pressure gross margin.
+  top_opportunities: "New ERP implementation on budget — automated management pack expected in September, reducing close time by an estimated 40%."
+
+example_output: |
+  Acme Widgets delivered EBITDA of £33,000 in July 2026, £5,200 ahead of budget (18.7% favourable), marking the third consecutive month of outperformance. Revenue of £168,000 exceeded plan by £8,000, driven by stronger-than-expected enterprise volumes, while the cash position strengthened to £412,000 at month end. The primary risk heading into August is the delayed renewal of the TechCo supply contract, which represents approximately £22,000 of monthly revenue and remains under commercial negotiation. Additionally, the board should note rising logistics costs, which are beginning to pressure gross margin and will be monitored closely in Q4. On the positive side, the new ERP implementation is tracking on budget and the Finance team expects to deliver the first automated management pack in September, reducing close time by an estimated 40%. The full-year EBITDA forecast is maintained at £380,000, approximately 3% ahead of budget.
