@@ -108,3 +108,39 @@ render/CLI smoke test across all 19 prompts before touching anything:
   fresh scope to invent — do not add features or expand scope beyond what's listed at the
   top of this file's originating task. If genuinely nothing changed and nothing needs
   doing, say so briefly in this log rather than manufacturing busywork.
+
+---
+
+## Session 2 — 2026-09-08 (Monday)
+
+**Branch:** resumed `claude/holiday-hardening` (existed remotely from session 1, checked
+out and pulled — no rebase needed, up to date with main's original base).
+
+### What I checked
+
+- `python -m pytest tests/test_library.py -q` — still **130 passed, 10 skipped**, same as
+  session 1 (skips are the 10 prompts with no `computed_fields`, expected). No
+  regressions.
+- `python cli.py list` — all 19 prompts still list correctly across the 5 categories.
+- PR #1: still open, no reviews, no PR comments, no CI checks configured on the repo
+  (status check returned zero statuses) — so no review feedback or CI failures to act on.
+- Re-read the three items flagged for Keyaan in session 1 (`vat_rec`/`margin_bridge`
+  missing `example_output`, no root `README.md`, personal path in
+  `anthropic_provider.py`) — no response from Keyaan yet (no PR comments at all), so per
+  session 1's own instruction I'm leaving all three untouched rather than guessing his
+  call.
+
+### Work done this session
+
+None — this was a verification-only pass. Scope items 1–6 were already substantively
+complete after session 1, nothing regressed, and there was no new signal (no PR feedback,
+no CI, no code drift) to act on. Per the standing instruction not to manufacture busywork,
+no code changes were made. PR #1 body updated to note this session's verification.
+
+### State for next session
+
+Unchanged from session 1's summary above, plus: confirmed stable as of 2026-09-08.
+**Next session should** repeat the same check (tests still green, CLI still clean, check
+PR #1 for any comments/CI from Keyaan) and only act if something has actually changed —
+if this is still a no-op by Wednesday, that's a legitimate outcome for an
+already-launch-ready codebase, not a sign of missed work.
