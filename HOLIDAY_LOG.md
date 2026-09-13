@@ -182,3 +182,49 @@ Unchanged from session 1/2. If a future session resumes this branch: re-run the 
 three checks (tests, CLI, PR feedback/CI/main-drift) first. Only pick up new work if
 Keyaan has actually responded to one of the three flagged items above, or if a genuine
 regression turns up — do not manufacture busywork on an already-complete, stable pass.
+
+---
+
+## Session 4 — 2026-09-13
+
+**Branch:** resumed `claude/holiday-hardening` (fetched + checked out, already up to date
+with origin, no rebase needed — `main` has not moved, still at `0f29f25`).
+
+**Environment note:** this session's container came up with no dependencies installed at
+all (`python -m pytest` failed with `No module named pytest` before anything else ran).
+Ran `pip install -r requirements.txt` to restore the environment — this is a container
+difference, not a repo change (`requirements.txt` itself is untouched, already pinned
+`pytest>=8.0.0`).
+
+### What I checked
+
+- After installing deps: `python -m pytest tests/test_library.py -q` — still **130
+  passed, 10 skipped**. No regressions.
+- `python cli.py list` — all 19 prompts still list correctly across all 5 categories.
+- `git status --short` — clean working tree, no drift. `find prompts -name '*.yaml' | wc
+  -l` — still 19.
+- PR #1: still open. `get_comments`, `get_reviews`, `get_review_comments` all still
+  empty; `get_status` still `{"state":"pending","total_count":0,"statuses":[]}` — no CI
+  configured on the repo, still no feedback from Keyaan.
+- `main`: fetched, still at `0f29f25`, no divergence from the branch's base — no direct
+  pushes to react to.
+- Re-checked all three items flagged for Keyaan in session 1 directly against the working
+  tree: `vat_rec.yaml`/`margin_bridge.yaml` still have zero `example_output` occurrences,
+  `README.md` still doesn't exist at repo root, `anthropic_provider.py` lines 26-30 still
+  reference `~/Claude/intelligence-hub`/`TrackedAnthropic` unchanged. All three remain
+  open judgment calls with no response yet.
+
+### Work done this session
+
+None beyond restoring the environment and confirming the log/PR reflect the current
+state — fourth consecutive verification-only pass. Nothing has changed in the codebase,
+on `main`, or on PR #1 since session 3. Updated the PR body to record this session's
+verification.
+
+### State for next session
+
+Unchanged from sessions 1-3. If dependencies are missing again on the next container,
+`pip install -r requirements.txt` first before assuming a regression. Only pick up new
+work if Keyaan has actually responded to one of the three flagged items above, or if a
+genuine regression turns up — do not manufacture busywork on an already-complete, stable
+pass.
