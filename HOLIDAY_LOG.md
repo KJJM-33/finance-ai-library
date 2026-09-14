@@ -228,3 +228,52 @@ Unchanged from sessions 1-3. If dependencies are missing again on the next conta
 work if Keyaan has actually responded to one of the three flagged items above, or if a
 genuine regression turns up — do not manufacture busywork on an already-complete, stable
 pass.
+
+---
+
+## Session 5 — 2026-09-14 (Sunday)
+
+**Branch:** resumed `claude/holiday-hardening` (fetched + checked out, already up to date
+with origin, no rebase needed — `main` has not moved, still at `0f29f25`).
+
+**Environment note:** same as session 4 — container came up with `pytest` missing
+(`pyyaml` was present). `pip install -r requirements.txt` hit a `ReadTimeoutError`
+against `files.pythonhosted.org` (twice, even with `--timeout 60`) trying to resolve the
+full set including `streamlit`/`anthropic`/`openai`, none of which the test suite
+actually needs. Installed just `pip install pytest` instead, which succeeded on the first
+try — a narrower, faster fix than reinstalling the whole requirements file when only the
+test runner is missing.
+
+### What I checked
+
+- After installing `pytest`: `python -m pytest tests/test_library.py -q` — still **130
+  passed, 10 skipped**. No regressions.
+- `python cli.py list` — all 19 prompts still list correctly across all 5 categories.
+- `git status --short` — clean working tree. `find prompts -name '*.yaml' | wc -l` —
+  still 19.
+- `main`: fetched, still at `0f29f25`, no divergence from the branch's base — no direct
+  pushes to react to.
+- PR #1: still open, title unchanged. Checked comments, reviews, review comments, and
+  check-runs via the GitHub MCP tools — all still empty/zero. No CI configured on the
+  repo. No feedback from Keyaan.
+- Re-checked all three items flagged for Keyaan in session 1 directly against the working
+  tree: `vat_rec.yaml`/`margin_bridge.yaml` still have zero `example_output`
+  occurrences, `README.md` still doesn't exist at repo root, `anthropic_provider.py`
+  lines 26-30 still reference `~/Claude/intelligence-hub`/`TrackedAnthropic` unchanged.
+  All three remain open judgment calls with no response yet.
+
+### Work done this session
+
+None — fifth consecutive verification-only pass. Nothing has changed in the codebase, on
+`main`, or on PR #1 since session 4. Updated the PR body to record this session's
+verification.
+
+### State for next session
+
+Unchanged from sessions 1-4. If `pytest` (or other deps) are missing again on the next
+container, try installing just the missing package(s) first before a full
+`pip install -r requirements.txt` — the full install has timed out against PyPI in this
+environment on at least one occasion (session 5) even though only `pytest` was actually
+needed to run the suite. Only pick up new work if Keyaan has actually responded to one of
+the three flagged items above, or if a genuine regression turns up — do not manufacture
+busywork on an already-complete, stable pass.
