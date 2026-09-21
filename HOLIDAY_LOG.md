@@ -370,3 +370,50 @@ Unchanged from sessions 1-6. The codebase remains stable and launch-ready; the t
 flagged items are the only open threads and all are judgment calls for Keyaan, not bugs.
 If a future session resumes this branch: repeat the same checks (tests, CLI, PR
 feedback/CI/main-drift, the three flags) and only act on genuine change.
+
+---
+
+## Session 8 — 2026-09-21 (Monday)
+
+**Branch:** resumed `claude/holiday-hardening` (fetched + checked out, already up to date
+with origin, no rebase needed — `main` has not moved, still at `0f29f25`).
+
+**Environment note:** same pattern as sessions 4-7 — container came up with `pytest`
+missing. Installed just `pip install pytest`, succeeded immediately.
+
+### What I checked
+
+- After installing `pytest`: `python -m pytest tests/test_library.py -q` — still **130
+  passed, 10 skipped**. No regressions.
+- `python cli.py list` — all 19 prompts still list correctly across all 5 categories.
+- `git status --short` — clean working tree. `find prompts -name '*.yaml' | wc -l` —
+  still 19.
+- `main`: fetched, still at `0f29f25`, confirmed as ancestor of the branch (no divergence)
+  — no direct pushes to react to.
+- PR #1: still open, title unchanged ("Holiday hardening: full test coverage +
+  prompt-quality experiment (session 1)"). Checked comments, reviews, review comments,
+  and combined status via the GitHub MCP tools (delegated to a subagent) — all still
+  empty (0 comments, 0 reviews, 0 review comments, combined status `pending`/
+  `total_count: 0`). No CI configured on the repo. No feedback from Keyaan anywhere on
+  the PR.
+- Re-checked all three items flagged for Keyaan in session 1 directly against the working
+  tree: `vat_rec.yaml`/`margin_bridge.yaml` still have zero `example_output`
+  occurrences, `README.md` still doesn't exist at repo root, `anthropic_provider.py`
+  lines 26-30 still reference `~/Claude/intelligence-hub`/`TrackedAnthropic` unchanged.
+  All three remain open judgment calls with no response yet.
+
+### Work done this session
+
+None — eighth consecutive verification-only pass. Nothing has changed in the codebase,
+on `main`, or on PR #1 since session 7. Per the standing instruction not to manufacture
+busywork on an already-complete, stable pass, no code changes were made. PR #1 body
+updated to note this session's verification. No user-facing notification sent — nothing
+surfaced that needs Keyaan's attention beyond what's already flagged and awaiting his
+return.
+
+### State for next session
+
+Unchanged from sessions 1-7. The codebase remains stable and launch-ready; the three
+flagged items are the only open threads and all are judgment calls for Keyaan, not bugs.
+If a future session resumes this branch: repeat the same checks (tests, CLI, PR
+feedback/CI/main-drift, the three flags) and only act on genuine change.
