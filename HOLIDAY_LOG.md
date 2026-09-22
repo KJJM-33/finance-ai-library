@@ -417,3 +417,53 @@ Unchanged from sessions 1-7. The codebase remains stable and launch-ready; the t
 flagged items are the only open threads and all are judgment calls for Keyaan, not bugs.
 If a future session resumes this branch: repeat the same checks (tests, CLI, PR
 feedback/CI/main-drift, the three flags) and only act on genuine change.
+
+---
+
+## Session 9 — 2026-09-22 (Tuesday)
+
+**Branch:** resumed `claude/holiday-hardening` (fetched + checked out, already up to date
+with origin, no rebase needed — `main` has not moved, still at `0f29f25`).
+
+**Environment note:** same pattern as sessions 4-8 — container came up with dependencies
+missing, this time `pyyaml` as well as `pytest` (a plain `pip install pytest` alone would
+not have been enough this time). Ran the full `pip install -r requirements.txt`, which
+succeeded without the timeout seen in session 5.
+
+### What I checked
+
+- After installing deps: `python -m pytest tests/test_library.py -q` — still **130
+  passed, 10 skipped**. No regressions.
+- `python cli.py list` — all 19 prompts still list correctly across all 5 categories.
+- `git status --short` — clean working tree. `find prompts -name '*.yaml' | wc -l` —
+  still 19.
+- `main`: fetched, still at `0f29f25`, no divergence from the branch's base — no direct
+  pushes to react to.
+- PR #1: still open, title unchanged. Checked comments, reviews, and combined status via
+  the GitHub MCP tools directly — all still empty (`[]`, `[]`,
+  `{"state":"pending","total_count":0,"statuses":[]}`). No CI configured on the repo. No
+  feedback from Keyaan anywhere on the PR.
+- Re-checked all three items flagged for Keyaan in session 1 directly against the working
+  tree: `vat_rec.yaml`/`margin_bridge.yaml` still have zero `example_output`
+  occurrences, `README.md` still doesn't exist at repo root, `anthropic_provider.py`
+  lines 26-30 still reference `~/Claude/intelligence-hub`/`TrackedAnthropic` unchanged.
+  All three remain open judgment calls with no response yet.
+
+### Work done this session
+
+None — ninth consecutive verification-only pass (eighth since the substantive work in
+session 1). Nothing has changed in the codebase, on `main`, or on PR #1 since session 8.
+Per the standing instruction not to manufacture busywork on an already-complete, stable
+pass, no code changes were made. PR #1 body updated to note this session's verification.
+No user-facing notification sent — nothing surfaced that needs Keyaan's attention beyond
+what's already flagged and awaiting his return.
+
+### State for next session
+
+Unchanged from sessions 1-8. The codebase remains stable and launch-ready; the three
+flagged items are the only open threads and all are judgment calls for Keyaan, not bugs.
+This has now been a no-op for eight straight sessions across two weeks — if a future
+session resumes this branch and finds the same state yet again with still no response
+from Keyaan, that continues to be a legitimate outcome for an already-launch-ready
+codebase, not a sign anything is being missed. Repeat the same checks (tests, CLI, PR
+feedback/CI/main-drift, the three flags) and only act on genuine change.
